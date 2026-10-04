@@ -2155,9 +2155,9 @@ function lgEligibleNominated(teamKey,heatIdx){
   const h=m.heats[heatIdx];
   const inHeat=new Set(h.slots.filter(s=>s.num!=null).map(s=>s.num));
   const other=m.heats[h.n===14?heatIdx+1:heatIdx-1];
-  /* Wyj\u0105tek regulaminowy: rezerwa taktyczna (RT) w drugim biegu nominowanym
-     NIE blokuje jazdy zasadniczej w tym biegu \u2014 zawodnik przydzielony z urz\u0119du
-     do 15 mo\u017ce pojecha\u0107 w 14 jako RT i nadal jecha\u0107 w 15. */
+  /* Wyjątek regulaminowy: rezerwa taktyczna (RT) w drugim biegu nominowanym
+     NIE blokuje jazdy zasadniczej w tym biegu — zawodnik przydzielony z urzędu
+     do 15 może pojechać w 14 jako RT i nadal jechać w 15. */
   const inOther=new Set(other&&other.slots.filter(s=>s.num!=null&&!s.subType).map(s=>s.num));
   let cands=lgNomMainNums(teamKey);
   return cands.filter(n=>{

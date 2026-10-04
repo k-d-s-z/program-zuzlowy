@@ -41,9 +41,9 @@ body {
   overscroll-behavior-y: contain;
 }
 html { overscroll-behavior-y: contain; }
-/* A11y: pomimo globalnego user-select:none tekst w formularzach, tabelach wyników
-   i treści tekstowej pozostaje normalnie zaznaczalny (kopiowanie wyników itd.). */
-/* A11y: widoczna etykieta pól formularzy (zamiast samego placeholdera). */
+/* A11y: pomimo globalnego user-select:none tekst w formularzach, tabelach wynikÃ³w
+   i treÅci tekstowej pozostaje normalnie zaznaczalny (kopiowanie wynikÃ³w itd.). */
+/* A11y: widoczna etykieta pÃ³l formularzy (zamiast samego placeholdera). */
 .sr-label { display:block; font-size: 0.72rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; text-align:left; }
 input, textarea, select, table, .copyable, .lg-tname { user-select: text; -webkit-user-select: text; }
 button { font-family: inherit; cursor: pointer; }
@@ -260,10 +260,14 @@ table.pts td.plc { font-weight: 800; color: var(--amber); user-select: none; }
 }
 .heat.dim { opacity: 0.45; }
 .heat.active { border-color: var(--ov-35); box-shadow: 0 0 0 1px rgba(229,231,235,0.2), 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 var(--ov-12); }
-.heathead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+/* NagÅÃ³wek biegu zawija siÄ na wÄ
+skich ekranach (duÅ¼a czcionka, wiele przyciskÃ³w
+   w meczu ligowym) â akcje schodzÄ
+ do drugiego wiersza, nigdy poza kartÄ. */
+.heathead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
 .heatnum { font-weight: 800; color: var(--text-strong); font-size: 1.1rem; }
 .heattime { margin-left: 8px; font-size: 0.85rem; color: var(--accent-blue); font-weight: 700; letter-spacing: 0.5px; }
-.heatactions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.heatactions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 
 .hrows { display: flex; flex-direction: column; gap: 8px; }
 .rcard {
@@ -372,7 +376,7 @@ table.pts td.plc:not(.tie) { cursor: default; }
 }
 .switch.on .knob { left: 28px; }
 
-/* ===== MECZ LIGOWY (prefiks lg- — niezależny od stylów zawodów indywidualnych) ===== */
+/* ===== MECZ LIGOWY (prefiks lg- â niezaleÅ¼ny od stylÃ³w zawodÃ³w indywidualnych) ===== */
 #match { padding-bottom: 200px; }
 .lg-teamcard { position: relative; border-radius: 18px; margin: 14px 0; background: var(--ov-06); border: 1px solid var(--ov-12); overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--ov-08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .heat.done { background: rgba(0,0,0,0.28); border-color: var(--ov-08); opacity: 0.72; }
@@ -417,7 +421,7 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .lg-candbtn { width: 100%; text-align: left; background: var(--ov-05); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; color: var(--text-strong); font-size: 0.82rem; font-weight: 600; }
 .lg-candbtn small { display: block; color: var(--text-muted); font-weight: 600; }
 
-/* Pasek wyniku meczu — zawsze przypięty na dole */
+/* Pasek wyniku meczu â zawsze przypiÄty na dole */
 .lg-scorebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); }
 .lg-scorebar-inner { max-width: 900px; margin: 0 auto; }
 .lg-sbrow { display: flex; gap: 5px; margin-bottom: 5px; }
@@ -430,7 +434,8 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .lg-scorerow .ssc { font-size: 1.9rem; font-weight: 800; font-family: var(--font-head); color: var(--accent-blue); flex-shrink: 0; letter-spacing: 1px; }
 .lg-sbicon { flex: 0 0 44px; background: var(--ov-06); border: 1px solid var(--ov-15); border-radius: 10px; color: var(--text-strong); min-height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; }
 .lg-sbicon svg { width: 18px; height: 18px; fill: currentColor; }
-/* Pływające menu (dół ekranu): jednakowe przyciski w zawodach indywidualnych i ligowych */
+/* PÅywajÄ
+ce menu (dÃ³Å ekranu): jednakowe przyciski w zawodach indywidualnych i ligowych */
 .fbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
 .fbtn { flex: 0 0 clamp(40px, 11.5vw, 52px); height: 46px; padding: 0; border-radius: 12px; background: var(--ov-06); border: 1px solid var(--ov-15); color: var(--text-strong); display: flex; align-items: center; justify-content: center; }
 .fbtn svg { width: 24px; height: 24px; fill: currentColor; }
@@ -441,19 +446,23 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .fbar-t { display: block; font-size: 1.15rem; font-weight: 800; }
 .fbar-s { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-top: 1px; }
 #points, #races { padding-bottom: 84px; }
-/* Klasyfikacja: karta sięga do dołu ekranu, a pływające menu zakrywa jej spód (jak na pozostałych ekranach).
-   Tabela przewija się wewnątrz karty (zostaje przypięty nagłówek i kolumna nazwisk);
-   dolny padding pozwala przewinąć ostatni wiersz ponad menu. */
+/* Klasyfikacja: karta siÄga do doÅu ekranu, a pÅywajÄ
+ce menu zakrywa jej spÃ³d (jak na pozostaÅych ekranach).
+   Tabela przewija siÄ wewnÄ
+trz karty (zostaje przypiÄty nagÅÃ³wek i kolumna nazwisk);
+   dolny padding pozwala przewinÄ
+Ä ostatni wiersz ponad menu. */
 #points { min-height: 0; padding-bottom: 0; }
 #points > .card { margin-bottom: 0; }
 #points .tblwrap { max-height: calc(100vh - 34px); max-height: calc(100dvh - 34px); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
 .lg-sbicon.active { background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 100%); color: #0b0f19; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
-/* Ekran składów drużyny (lineup meczu ligowego) */
+/* Ekran skÅadÃ³w druÅ¼yny (lineup meczu ligowego) */
 .lg-lineuprow { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
 .lg-lineuprow .no { font-family: var(--font-head); font-weight: 800; color: var(--accent-blue); width: 34px; text-align: center; flex-shrink: 0; }
 
-/* A11y: respektowanie preferencji prefers-reduced-motion — wyłącza animacje. */
+/* A11y: respektowanie preferencji prefers-reduced-motion â wyÅÄ
+cza animacje. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -462,7 +471,7 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
     scroll-behavior: auto !important;
   }
 }
-/* Jasny motyw \u2014 automatycznie, gdy system ma ustawiony jasny tryb. */
+/* Jasny motyw — automatycznie, gdy system ma ustawiony jasny tryb. */
 /* Tablety i ekrany szerokie. */
 @media (min-width: 700px) {
   .screen { padding: 20px 24px 96px; }
@@ -476,7 +485,7 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 }
 @media (hover: hover) { .btn:hover, .iconbtn:hover { filter: brightness(1.06); } }
 
-/* Wybór zawodnika z bazy: lista + pasek liter */
+/* WybÃ³r zawodnika z bazy: lista + pasek liter */
 .rp-wrap { display: flex; gap: 6px; align-items: stretch; }
 .rp-list { flex: 1; min-width: 0; max-height: 46vh; overflow-y: auto; position: relative; overscroll-behavior: contain; }
 .rp-index { display: flex; flex-direction: column; align-items: center; max-height: 46vh; overflow-y: auto; gap: 1px; padding: 2px 0; flex-shrink: 0; }
