@@ -2697,6 +2697,9 @@ function lgRender(){
 function lgRenderHeatOnly(heatIdx){
   const el=$("lgheat-"+(heatIdx+1));
   if(!el){lgRender();return;}
+  /* Pasek „Zestaw startowy” stoi tuż przed kartą biegu (1 i 14) i nie jest jej częścią —
+     bez usunięcia starego paska każde odświeżenie karty dokładałoby kolejny. */
+  while(el.previousElementSibling&&el.previousElementSibling.classList.contains("lg-setbar"))el.previousElementSibling.remove();
   el.outerHTML=lgHeatHtml(heatIdx);
   lgMaybePromptZZ();
 }
