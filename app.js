@@ -35,10 +35,28 @@ const store={
 function prestartSnapshot(c){
   try{const k=LS+".prestart."+c.id;if(store.get(k)==null)store.set(k,JSON.stringify({savedAt:Date.now(),comp:c}));}catch(e){}
 }
+/* Naprawa danych zapisanych przed poprawką kodowania: uszkodzone ciągi (np. zamiast "Ż" litery obce)
+   wracają do właściwej postaci. Dotyczy zapisanych zawodów, bazy zawodników i kopii. */
+const MOJI_RE=/[\u00c2-\u00f4][\u0080-\u00bf]+/g;
+function fixMojiStr(s){
+  if(!MOJI_RE.test(s)){MOJI_RE.lastIndex=0;return s;}
+  MOJI_RE.lastIndex=0;
+  return s.replace(MOJI_RE,m=>{
+    try{return new TextDecoder("utf-8",{fatal:true}).decode(Uint8Array.from(m,c=>c.charCodeAt(0)));}catch(e){return m;}
+  });
+}
+function fixMojiDeep(v){
+  if(typeof v==="string")return fixMojiStr(v);
+  if(Array.isArray(v)){for(let i=0;i<v.length;i++)v[i]=fixMojiDeep(v[i]);return v;}
+  if(v&&typeof v==="object"){
+    Object.keys(v).forEach(k=>{const nk=fixMojiStr(k);const val=fixMojiDeep(v[k]);if(nk!==k)delete v[k];v[nk]=val;});
+  }
+  return v;
+}
 const DB={
   metaKey:LS+".meta",
   compKey:id=>LS+".c."+id,
-  get(k){try{return JSON.parse(store.get(k));}catch(e){return null;}},
+  get(k){try{return fixMojiDeep(JSON.parse(store.get(k)));}catch(e){return null;}},
   set(k,v){return store.set(k,JSON.stringify(v));},
   /* Migracja ze starego, jednego klucza zuzel.v1 */
   migrateOld(){
@@ -564,7 +582,7 @@ const UI={
     const rd=new FileReader();
     rd.onload=()=>{
       let d;
-      try{d=JSON.parse(rd.result);}catch(e){UI.toast("❌ Błąd pliku — to nie jest JSON.");return;}
+      try{d=fixMojiDeep(JSON.parse(rd.result));}catch(e){UI.toast("❌ Błąd pliku — to nie jest JSON.");return;}
       /* Pełna walidacja schematu przed nadpisaniem danych — chroni pętle renderujące przed uszkodzonymi obiektami. */
       if(d&&typeof d==="object"&&typeof d.schemaVersion==="number"&&d.schemaVersion>DATA_SCHEMA){UI.toast("❌ Kopia pochodzi z nowszej wersji aplikacji — zaktualizuj aplikację.");return;}
       const err=validateData(d);
@@ -2302,7 +2320,7 @@ UI.lgNominateCancel=function(){
   LgNom=null;LgNomPre=null;
   if(m&&typeof pre==="string"){
     let restored=null;
-    try{restored=JSON.parse(pre);}catch(e){}
+    try{restored=fixMojiDeep(JSON.parse(pre));}catch(e){}
     if(restored&&typeof restored==="object"){
       if(!mutate(()=>{Object.keys(restored).forEach(k=>m[k]=restored[k]);}))return;
     }
@@ -2858,7 +2876,7 @@ function lgHeatHtml(heatIdx){
     "</div>";
   return extraBar+"<div id='lgheat-"+h.n+"' class='heat"+(h.confirmed?" done":"")+(active?" active":"")+(dim?" dim":"")+"'>"+
     "<div class='heathead'><span class='heatnum'>BIEG "+h.n+(h.time?"<span class='heattime'>"+escq(h.time)+"</span>":"")+"</span>"+
-    "<div class='lg-heatscore"+(h.confirmed?"":" empty")+"'>"+scoreTxt+"</div>"+actions+"</div>"+
+    "<div class='lg-headright'><div class='lg-heatscore"+(h.confirmed?"":" empty")+"'>"+scoreTxt+"</div>"+actions+"</div></div>"+
     "<div class='hrows'>"+rows+"</div></div>";
 }
 
