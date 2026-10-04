@@ -2376,6 +2376,15 @@ UI.lgConfirmHeat=function(heatIdx){
       return;
     }
   }
+  if(h.n===14){
+    /* Regulamin: nominacje do biegów 14 i 15 zapadają RAZEM, przed rozegraniem 14.
+       Nie można zatwierdzić biegu 14, dopóki skład na bieg 15 nie jest obsadzony. */
+    const h15=m.heats[heatIdx+1];
+    if(h15&&h15.slots.some(s=>s.num==null)){
+      UI.toast("Najpierw nominuj skład do biegu 15 — nominacje do biegów 14 i 15 zapadają razem.");
+      return;
+    }
+  }
   if(h.n===14||h.n===15){
     const mains={home:new Set(lgNomMainNums("home")),away:new Set(lgNomMainNums("away"))};
     /* Numery jazd zasadniczych (bez rezerw RZ/RT/ZZ) w drugim biegu nominowanym â
