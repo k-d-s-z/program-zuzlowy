@@ -21,12 +21,12 @@ const ICON_DOWN='<svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58
 const ICON_FLAG='<svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>';
 const ICON_X='<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
 
-/* Bezpieczny dost\u0119p do localStorage \u2014 w iframe/trybie prywatnym dost\u0119p mo\u017ce rzuca\u0107 wyj\u0105tkiem.
-   Bez magazynu aplikacja dzia\u0142a w pami\u0119ci (dane znikaj\u0105 po zamkni\u0119ciu karty). */
+/* Bezpieczny dostęp do localStorage — w iframe/trybie prywatnym dostęp może rzucać wyjątkiem.
+   Bez magazynu aplikacja działa w pamięci (dane znikają po zamknięciu karty). */
 const store={
   get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
-  /* Zapis rzuca wyj\u0105tek przy b\u0142\u0119dzie (np. pe\u0142ny magazyn) \u2014 wyciszenie b\u0142\u0119du
-     mog\u0142oby suggestowa\u0107 udany zapis. Odbiorcy (persist/persistAll) \u0142api\u0105 i raportuj\u0105. */
+  /* Zapis rzuca wyjątek przy błędzie (np. pełny magazyn) — wyciszenie błędu
+     mogłoby suggestować udany zapis. Odbiorcy (persist/persistAll) łapią i raportują. */
   set(k,v){localStorage.setItem(k,v);},
   remove(k){try{localStorage.removeItem(k);}catch(e){}},
   keys(){try{const out=[];for(let i=0;i<localStorage.length;i++)out.push(localStorage.key(i));return out;}catch(e){return [];}}
@@ -95,22 +95,22 @@ function persistAll(){
     DB.set(DB.metaKey,{riders:S.riders,current:S.current,settings:S.settings,teams:S.teams,juniors:S.juniors,rosters:S.rosters});
     Object.values(S.comps).forEach(c=>DB.set(DB.compKey(c.id),c));
     return true;
-  }catch(e){UI.toast("\u274c Zapis nieudany \u2014 brak miejsca w pami\u0119ci przegl\u0105darki.");return false;}
+  }catch(e){UI.toast("❌ Zapis nieudany — brak miejsca w pamięci przeglądarki.");return false;}
 }
-/* Transakcyjna mutacja: snapshot \u2192 operacja \u2192 zapis; przy b\u0142\u0119dzie operacji
-   LUB nieudanym zapisie nast\u0119puje rollback stanu i widoczny komunikat. */
+/* Transakcyjna mutacja: snapshot → operacja → zapis; przy błędzie operacji
+   LUB nieudanym zapisie następuje rollback stanu i widoczny komunikat. */
 function mutate(fn){
   const snap=JSON.stringify(S);
   try{fn();}
-  catch(err){try{S=JSON.parse(snap);}catch(e2){}UI.toast("\u274c B\u0142\u0105d operacji \u2014 zmiany cofni\u0119te.");return false;}
+  catch(err){try{S=JSON.parse(snap);}catch(e2){}UI.toast("❌ Błąd operacji — zmiany cofnięte.");return false;}
   if(!persist()){
     try{S=JSON.parse(snap);}catch(e2){}
-    UI.toast("\u274c Zapis nieudany \u2014 zmiany cofni\u0119te.");
+    UI.toast("❌ Zapis nieudany — zmiany cofnięte.");
     return false;
   }
   return true;
 }
-/* Batchowanie render\u00f3w przez requestAnimationFrame (mniej DOM thrashingu). */
+/* Batchowanie renderów przez requestAnimationFrame (mniej DOM thrashingu). */
 let _rafPending=false;
 function scheduleRenders(){
   if(_rafPending)return;_rafPending=true;
@@ -126,7 +126,7 @@ function getHeatLabel(h){
   return String(h.n);
 }
 
-/* Formatuje liczb\u0119 milisekund jako "SS,mmm" (np. 64254 -> "64,254"). */
+/* Formatuje liczbę milisekund jako "SS,mmm" (np. 64254 -> "64,254"). */
 function fmtHeatTime(ms){
   ms=ms||0;
   return Math.floor(ms/1000)+","+String(ms%1000).padStart(3,"0");
@@ -247,9 +247,9 @@ function bracketOrder(c){
   return changed?result:null;
 }
 
-/* Punkty wirtualne z bezpo\u015brednich pojedynk\u00f3w mi\u0119dzy wskazanymi zawodnikami:
-   w ka\u017cdym zatwierdzonym (nie dodatkowym) biegu, za ka\u017cd\u0105 par\u0119 z grupy, kt\u00f3ra
-   uko\u0144czy\u0142a bieg, zawodnik wy\u017cej sklasyfikowany dostaje 1 wirtualny punkt. */
+/* Punkty wirtualne z bezpośrednich pojedynków między wskazanymi zawodnikami:
+   w każdym zatwierdzonym (nie dodatkowym) biegu, za każdą parę z grupy, która
+   ukończyła bieg, zawodnik wyżej sklasyfikowany dostaje 1 wirtualny punkt. */
 function h2hPoints(c,nums){
   const set=new Set(nums);const pts={};nums.forEach(n=>pts[n]=0);
   compHeats(c).forEach(h=>{
@@ -265,8 +265,8 @@ function h2hPoints(c,nums){
   });
   return pts;
 }
-/* Dzieli grupy remisowe wg punkt\u00f3w bezpo\u015brednich pojedynk\u00f3w (gdy opcja w\u0142\u0105czona).
-   Zawodnicy z r\u00f3wn\u0105 liczb\u0105 punkt\u00f3w pozostaj\u0105 w podgrupie do r\u0119cznego rozstrzygni\u0119cia. */
+/* Dzieli grupy remisowe wg punktów bezpośrednich pojedynków (gdy opcja włączona).
+   Zawodnicy z równą liczbą punktów pozostają w podgrupie do ręcznego rozstrzygnięcia. */
 function splitGroupsH2H(c,groups){
   if(!c.h2h)return groups;
   const out=[];
@@ -327,7 +327,7 @@ function placeLabel(c,num,groups){
     if(c.overrides[num])return String(c.overrides[num]);
     const taken=g.nums.map(n=>c.overrides[n]).filter(Boolean);
     const free=[];for(let p=g.start;p<=end;p++)if(!taken.includes(p))free.push(p);
-    return free.length===1?String(free[0]):(free.length?free[0]+"\u2013"+free[free.length-1]:g.start+"\u2013"+end);
+    return free.length===1?String(free[0]):(free.length?free[0]+"–"+free[free.length-1]:g.start+"–"+end);
   }
   return "";
 }
@@ -380,9 +380,9 @@ const UI={
     if(id==="races")requestAnimationFrame(scrollToCurrentHeat);
   },
   continueLast(){const id=S.settings.lastComp;if(id&&S.comps[id])UI.openComp(id);},
-  /* Nawigacja ikonowa (Klasyfikacja / Wy\u015bcigi) w nag\u0142\u00f3wkach obu ekran\u00f3w. */
+  /* Nawigacja ikonowa (Klasyfikacja / Wyścigi) w nagłówkach obu ekranów. */
   navScreen(id){
-    if(!cur()){UI.toast("Brak otwartych zawod\u00f3w.");return;}
+    if(!cur()){UI.toast("Brak otwartych zawodów.");return;}
     UI.screen(id);
   },
   syncNavIcons(){
@@ -392,7 +392,7 @@ const UI={
     document.querySelectorAll(".navraces").forEach(b=>b.classList.toggle("active",sid==="races"));
   },
   toast(t){
-    const el=$("toast");const err=/^\s*\u274c/.test(String(t));
+    const el=$("toast");const err=/^\s*❌/.test(String(t));
     el.textContent=t;el.classList.toggle("err",err);el.style.display="block";
     clearTimeout(UI._toastT);
     UI._toastT=setTimeout(()=>{el.style.display="none";},err?4500:2200);
@@ -406,7 +406,7 @@ const UI={
     const h=m.querySelector("h3");
     if(h){if(!h.id)h.id="modalTitle";m.setAttribute("aria-labelledby",h.id);}
     $("overlay").classList.add("on");
-    /* Fokus: pole tekstowe, je\u015bli jest; w przeciwnym razie sam dialog. */
+    /* Fokus: pole tekstowe, jeśli jest; w przeciwnym razie sam dialog. */
     const inp=m.querySelector("input[type=text]");
     try{(inp||m).focus({preventScroll:true});}catch(e){}
     /* A11y: tÅo staje siÄ nieosiÄgalne dla klawiatury i czytnikÃ³w ekranu. */
@@ -427,7 +427,7 @@ const UI={
     $("cn").onclick=()=>{UI.closeModal();onNo?onNo():null;};},
 
   addRider(num){
-    UI.openModal("<h3>Dodaj zawodnika</h3><label for='nr' class='sr-label'>ImiÄ i nazwisko</label><input type='text' id='nr' placeholder='Imi\u0119 i Nazwisko' style='width:100%;margin-bottom:12px'>" + lgCatToggleHtml() + "<button class='btn primary' id='ok'>Dodaj</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
+    UI.openModal("<h3>Dodaj zawodnika</h3><label for='nr' class='sr-label'>ImiÄ i nazwisko</label><input type='text' id='nr' placeholder='Imię i Nazwisko' style='width:100%;margin-bottom:12px'>" + lgCatToggleHtml() + "<button class='btn primary' id='ok'>Dodaj</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
     const isJr=lgBindCatToggle();
     $("ok").onclick=()=>{const v=normName(cleanText($("nr").value,100));if(!v)return;
       mutate(()=>{
@@ -435,7 +435,7 @@ const UI={
         lgSetJuniorFlag(v,isJr());
         const c=cur();
         if(c){
-          /* Z okna wyboru numeru: nowy zawodnik trafia dok\u0142adnie pod wskazany numer. */
+          /* Z okna wyboru numeru: nowy zawodnik trafia dokładnie pod wskazany numer. */
           let target=(typeof num==="number"&&num>=1&&num<=18)?num:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].find(n=>!c.mapping[n]);
           if(target){
             Object.keys(c.mapping).forEach(k=>{if(+k!==target&&c.mapping[k]===v)delete c.mapping[k];});
@@ -450,11 +450,11 @@ const UI={
   },
   editRider(i){
     const old=S.riders[i];
-    UI.openModal("<h3>Edycja</h3><label for='nr' class='sr-label'>ImiÄ i nazwisko</label><input type='text' id='nr' value='"+escq(old)+"' style='width:100%;margin-bottom:12px'>" + lgCatToggleHtml() + "<button class='btn primary' id='ok'>Zapisz</button><button class='btn danger' id='del'>Usu\u0144</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
+    UI.openModal("<h3>Edycja</h3><label for='nr' class='sr-label'>ImiÄ i nazwisko</label><input type='text' id='nr' value='"+escq(old)+"' style='width:100%;margin-bottom:12px'>" + lgCatToggleHtml() + "<button class='btn primary' id='ok'>Zapisz</button><button class='btn danger' id='del'>Usuń</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
     const isJr=lgBindCatToggle();
     if((S.juniors||[]).includes(old))$("catJ").click();
     const refreshRiderViews=()=>{renderRiderLib();if($("teamDetail").classList.contains("on"))renderTeamDetail();};
-    /* Zmiana nazwiska nie mo\u017ce po cichu przepisywa\u0107 historii zapisanych zawod\u00f3w. */
+    /* Zmiana nazwiska nie może po cichu przepisywać historii zapisanych zawodów. */
     const applyRename=(v,everywhere)=>{
       const snap=JSON.stringify(S);
       S.riders[i]=v;
@@ -477,17 +477,17 @@ const UI={
         /* Nazwisko bez zmian â zapisujemy ewentualnÄ tylko zmianÄ kategorii S/J. */
         if(!mutate(()=>{lgSetJuniorFlag(v,isJr());}))return;
         UI.closeModal();refreshRiderViews();return;}
-      if(S.riders.includes(v)){UI.toast("\u274c Taki zawodnik ju\u017c istnieje w bazie.");return;}
+      if(S.riders.includes(v)){UI.toast("❌ Taki zawodnik już istnieje w bazie.");return;}
       const used=Object.values(S.comps).filter(c=>Object.values(c.mapping).includes(old)).length;
       if(!used){applyRename(v,false);return;}
-      UI.openModal("<h3>Zmiana nazwiska</h3><p style='text-align:center;margin:0 0 12px'>\u201e"+escq(old)+"\u201d wyst\u0119puje w zapisanych zawodach ("+used+"). Zmieni\u0107 nazwisko tak\u017ce tam?</p>"+
-        "<button class='btn primary' id='rnAll'>Tak \u2014 w bazie i we wszystkich zawodach</button>"+
+      UI.openModal("<h3>Zmiana nazwiska</h3><p style='text-align:center;margin:0 0 12px'>„"+escq(old)+"” występuje w zapisanych zawodach ("+used+"). Zmienić nazwisko także tam?</p>"+
+        "<button class='btn primary' id='rnAll'>Tak — w bazie i we wszystkich zawodach</button>"+
         "<button class='btn' id='rnLib'>Tylko w bazie (zawody bez zmian)</button>"+
         "<button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
       $("rnAll").onclick=()=>applyRename(v,true);
       $("rnLib").onclick=()=>applyRename(v,false);
     };
-    $("del").onclick=()=>{UI.closeModal();UI.confirm("Usun\u0105\u0107 zawodnika <b>"+escq(old)+"</b> z bazy?<br><small style='color:var(--text-muted)'>Nazwisko pozostanie w ju\u017c utworzonych zawodach \u2014 ich wyniki si\u0119 nie zmieni\u0105.</small>",()=>{
+    $("del").onclick=()=>{UI.closeModal();UI.confirm("Usunąć zawodnika <b>"+escq(old)+"</b> z bazy?<br><small style='color:var(--text-muted)'>Nazwisko pozostanie w już utworzonych zawodach — ich wyniki się nie zmienią.</small>",()=>{
       const snap=JSON.stringify(S);
       S.riders.splice(i,1);
       if(!persist()){try{S=JSON.parse(snap);}catch(e){}return;}
@@ -499,7 +499,7 @@ const UI={
     const c=newComp(fmt);S.comps[c.id]=c;S.current=c.id;c.launched=false;persist();
     UI.screen("lineup");
   },
-  cancelLineup(){UI.confirm("Porzuci\u0107 tworzenie zawod\u00f3w?",()=>{const id=S.current;delete S.comps[id];S.current=null;DB.removeComp(id);persist();UI.screen("home");});},
+  cancelLineup(){UI.confirm("Porzucić tworzenie zawodów?",()=>{const id=S.current;delete S.comps[id];S.current=null;DB.removeComp(id);persist();UI.screen("home");});},
   launch(){
     const c=cur();if(!c)return;
     if(!c.mapping[1]){UI.toast("Przypisz zawodnika nr 1.");return;}
@@ -509,14 +509,14 @@ const UI={
   },
   promptName(cb){
     const c=cur();if(!c)return;
-    UI.openModal("<h3>Nazwa zawod\u00f3w</h3><input type='text' id='compName' placeholder='np. Grand Prix Polski w Lublinie' style='margin-bottom:12px'><button class='btn primary' id='nameOk'>Zapisz</button><button class='btn' id='nameSkip'>Domy\u015blna nazwa</button>");
+    UI.openModal("<h3>Nazwa zawodów</h3><input type='text' id='compName' placeholder='np. Grand Prix Polski w Lublinie' style='margin-bottom:12px'><button class='btn primary' id='nameOk'>Zapisz</button><button class='btn' id='nameSkip'>Domyślna nazwa</button>");
     const fin=(v)=>{c.name=cleanText(v,80)||("Zawody "+c.format+"-biegowe");persist();UI.closeModal();cb&&cb();};
     $("nameOk").onclick=()=>{fin($("compName").value);};
     $("nameSkip").onclick=()=>{fin("");};
   },
   renameComp(id){
     const c=S.comps[id];if(!c)return;
-    UI.openModal("<h3>Zmie\u0144 nazw\u0119 zawod\u00f3w</h3><input type='text' id='compName2' value=\""+escq(c.name||"")+"\" style='margin-bottom:12px'><button class='btn primary' id='renOk'>Zapisz</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
+    UI.openModal("<h3>Zmień nazwę zawodów</h3><input type='text' id='compName2' value=\""+escq(c.name||"")+"\" style='margin-bottom:12px'><button class='btn primary' id='renOk'>Zapisz</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
     $("renOk").onclick=()=>{
       const v=cleanText($("compName2").value,80);
       if(v)c.name=v;
@@ -526,13 +526,13 @@ const UI={
   },
   leave(){
     const c=cur();
-    let msg="Na pewno wr\u00f3ci\u0107 do ekranu g\u0142\u00f3wnego?<br><small style='color:var(--text-muted)'>Bie\u017c\u0105cy stan zawod\u00f3w zostanie automatycznie zapisany.</small>";
+    let msg="Na pewno wrócić do ekranu głównego?<br><small style='color:var(--text-muted)'>Bieżący stan zawodów zostanie automatycznie zapisany.</small>";
     if(c){
       const heats=compHeats(c).filter(h=>!h.extra);
       const openCnt=heats.filter(h=>!h.confirmed).length;
       const doneCnt=heats.filter(h=>h.confirmed).length;
       if(doneCnt>0&&openCnt>0)
-        msg="<b style='color:var(--amber)'>\u26a0 Uwaga: zawody w toku \u2014 "+openCnt+" niezatwierdzonych bieg\u00f3w.</b><br><small style='color:var(--text-muted)'>Bie\u017c\u0105cy stan zostanie zapisany i mo\u017cna do nich wr\u00f3ci\u0107 z ekranu g\u0142\u00f3wnego.</small>";
+        msg="<b style='color:var(--amber)'>⚠ Uwaga: zawody w toku — "+openCnt+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Bieżący stan zostanie zapisany i można do nich wrócić z ekranu głównego.</small>";
     }
     UI.confirm(msg,()=>{UI.screen("home");});
   },
@@ -541,7 +541,7 @@ const UI={
     const n=Object.keys(S.comps||{}).length;
     /* Bez zapisanych zawodÃ³w nie ma o co pytaÄ â kopia zawiera samÄ bazÄ (zawodnicy, druÅ¼yny, listy serii). */
     if(!n){UI.doExport(false);return;}
-    UI.openModal("<h3>Zapisz kopi\u0119 danych</h3><p style='text-align:center;margin:0 0 14px'>Kopia zawsze zawiera zawodnikÃ³w, druÅ¼yny oraz listy zawodnikÃ³w SGP, SEC, IMP i INNE.<br>Czy doÅÄczyÄ teÅ¼ historiÄ zawodÃ³w ("+n+")?</p>"+
+    UI.openModal("<h3>Zapisz kopię danych</h3><p style='text-align:center;margin:0 0 14px'>Kopia zawsze zawiera zawodnikÃ³w, druÅ¼yny oraz listy zawodnikÃ³w SGP, SEC, IMP i INNE.<br>Czy doÅÄczyÄ teÅ¼ historiÄ zawodÃ³w ("+n+")?</p>"+
       "<button class='btn primary' id='xyes'>Z historiÄ zawodÃ³w</button>"+
       "<button class='btn' id='xno'>Bez historii zawodÃ³w</button>"+
       "<button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>");
@@ -560,20 +560,20 @@ const UI={
   },
   importData(inp){
     const f=inp.files[0];if(!f)return;
-    if(f.size>IMPORT_LIMITS.bytes){UI.toast("\u274c Plik jest zbyt du\u017cy (limit 5 MB).");inp.value="";return;}
+    if(f.size>IMPORT_LIMITS.bytes){UI.toast("❌ Plik jest zbyt duży (limit 5 MB).");inp.value="";return;}
     const rd=new FileReader();
     rd.onload=()=>{
       let d;
-      try{d=JSON.parse(rd.result);}catch(e){UI.toast("\u274c B\u0142\u0105d pliku \u2014 to nie jest JSON.");return;}
-      /* Pe\u0142na walidacja schematu przed nadpisaniem danych \u2014 chroni p\u0119tle renderuj\u0105ce przed uszkodzonymi obiektami. */
+      try{d=JSON.parse(rd.result);}catch(e){UI.toast("❌ Błąd pliku — to nie jest JSON.");return;}
+      /* Pełna walidacja schematu przed nadpisaniem danych — chroni pętle renderujące przed uszkodzonymi obiektami. */
       if(d&&typeof d==="object"&&typeof d.schemaVersion==="number"&&d.schemaVersion>DATA_SCHEMA){UI.toast("â Kopia pochodzi z nowszej wersji aplikacji â zaktualizuj aplikacjÄ.");return;}
       const err=validateData(d);
-      if(err){UI.toast("\u274c Nieprawid\u0142owa kopia: "+err);return;}
+      if(err){UI.toast("❌ Nieprawidłowa kopia: "+err);return;}
       const hasComps=d.comps!==undefined;
       UI.confirm("<b>Kopia"+(d.exportedAt&&!isNaN(new Date(d.exportedAt))?" z "+escq(new Date(d.exportedAt).toLocaleString("pl-PL")):"")+":</b><br>"+d.riders.length+" zawodnikÃ³w Â· "+(Array.isArray(d.teams)?d.teams.length:0)+" druÅ¼yn Â· "+(hasComps?Object.keys(d.comps).length+" zawodÃ³w":"bez historii zawodÃ³w")+"<br><br>"+(hasComps?"PrzywrÃ³cenie kopii zastÄpi WSZYSTKIE obecne dane (zawodnikÃ³w, druÅ¼yny, listy SGP/SEC/IMP/INNE i historiÄ zawodÃ³w). KontynuowaÄ?":"PrzywrÃ³cenie kopii zastÄpi obecnych zawodnikÃ³w, druÅ¼yny i listy SGP/SEC/IMP/INNE. Historia zawodÃ³w zostanie zachowana. KontynuowaÄ?"),()=>{
-        /* Sanityzacja tekst\u00f3w z pliku: znaki kontrolne i limity d\u0142ugo\u015bci \u2014 tak\u017ce po walidacji. */
+        /* Sanityzacja tekstów z pliku: znaki kontrolne i limity długości — także po walidacji. */
         d.riders=d.riders.map(r=>cleanText(r,100)).filter(Boolean);
-        d.teams=(Array.isArray(d.teams)?d.teams:[]).map(t=>({...t,name:cleanText(t.name,100)||"Dru\u017cyna",riders:t.riders.map(r=>cleanText(r,100)).filter(Boolean)}));
+        d.teams=(Array.isArray(d.teams)?d.teams:[]).map(t=>({...t,name:cleanText(t.name,100)||"Drużyna",riders:t.riders.map(r=>cleanText(r,100)).filter(Boolean)}));
         d.juniors=(Array.isArray(d.juniors)?d.juniors:[]).map(r=>cleanText(r,100)).filter(Boolean);
         if(d.rosters&&typeof d.rosters==="object"){const ro={};Object.keys(d.rosters).forEach(k=>{const kk=cleanText(k,10);if(!kk||kk==="__proto__"||kk==="constructor"||kk==="prototype")return;ro[kk]=d.rosters[k].map(r=>cleanText(r,100)).filter(Boolean);});d.rosters=ro;}
         if(!hasComps)d.comps={};
@@ -583,8 +583,8 @@ const UI={
           if(!c.overrides)c.overrides={};
           Object.keys(c.mapping).forEach(k=>{c.mapping[k]=cleanText(c.mapping[k],100);});
         });
-        /* Zapis transakcyjny: najpierw NOWE dane, dopiero potem usuni\u0119cie starych.
-           Przy b\u0142\u0119dzie (np. brak miejsca) stan sprzed importu jest w ca\u0142o\u015bci odtwarzany. */
+        /* Zapis transakcyjny: najpierw NOWE dane, dopiero potem usunięcie starych.
+           Przy błędzie (np. brak miejsca) stan sprzed importu jest w całości odtwarzany. */
         const oldS=S;
         const oldIds=Object.keys(oldS.comps||{});
         const newIds=hasComps?Object.keys(d.comps):[];
@@ -603,11 +603,11 @@ const UI={
             DB.set(DB.metaKey,{riders:oldS.riders,current:oldS.current,settings:oldS.settings,teams:oldS.teams,juniors:oldS.juniors,rosters:oldS.rosters});
           }catch(e2){}
           S=oldS;
-          UI.toast("\u274c Import nieudany \u2014 dane sprzed importu zosta\u0142y zachowane.");
+          UI.toast("❌ Import nieudany — dane sprzed importu zostały zachowane.");
           renderSaved();
           return;
         }
-        UI.toast("\u2714 Przywr\u00f3cono kopi\u0119 danych.");renderSaved();
+        UI.toast("✔ Przywrócono kopię danych.");renderSaved();
       });
     };
     rd.readAsText(f);inp.value="";
@@ -623,24 +623,24 @@ const UI={
     scheduleRenders();
   },
 
-  /* Custom picker zamiast natywnego <select> \u2014 pe\u0142nowymiarowe, dotykowe przyciski. */
+  /* Custom picker zamiast natywnego <select> — pełnowymiarowe, dotykowe przyciski. */
   pickLineup(num){    const c=cur();if(!c)return;
     if(!S.riders.length){
-      UI.openModal("<h3>Nr "+num+" \u2014 wybierz zawodnika</h3><p style='text-align:center;color:var(--text-muted)'>Brak utworzonych zawodnikÃ³w. Zanim rozpoczniesz zawody utwÃ³rz zawodnikÃ³w w sekcji</p><button class='btn secondary' data-onclick='UI.goPeople()'>Zawodnicy i druÅ¼yny</button><button class='btn danger' style='margin-top:10px' id='rpClear0'>\u2014 Brak zawodnika \u2014</button><button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>");
+      UI.openModal("<h3>Nr "+num+" — wybierz zawodnika</h3><p style='text-align:center;color:var(--text-muted)'>Brak utworzonych zawodnikÃ³w. Zanim rozpoczniesz zawody utwÃ³rz zawodnikÃ³w w sekcji</p><button class='btn secondary' data-onclick='UI.goPeople()'>Zawodnicy i druÅ¼yny</button><button class='btn danger' style='margin-top:10px' id='rpClear0'>— Brak zawodnika —</button><button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>");
       $("rpClear0").onclick=()=>UI.clearRider(num);
       return;
     }
-    riderPicker({title:"Nr "+num+" \u2014 wybierz zawodnika",names:S.riders,
+    riderPicker({title:"Nr "+num+" — wybierz zawodnika",names:S.riders,
       onPick:name=>UI.setRider(num,name),
-      clear:{label:"\u2014 Brak zawodnika \u2014",fn:()=>UI.clearRider(num)}});
+      clear:{label:"— Brak zawodnika —",fn:()=>UI.clearRider(num)}});
   },
   clearRider(num){UI.setRider(num,"");},
 
-  /* ==== Ustawienia aplikacji (globalne, niezale\u017cne od zawod\u00f3w) ==== */
+  /* ==== Ustawienia aplikacji (globalne, niezależne od zawodów) ==== */
   setFont(sz){
     S.settings.font=sz;persist();UI.applyFont();renderSettings();
   },
-  /* Sortowanie klasyfikacji: wg numer\u00f3w startowych albo wg zajmowanego miejsca. */
+  /* Sortowanie klasyfikacji: wg numerów startowych albo wg zajmowanego miejsca. */
   toggleSort(){
     S.settings.sortByPlace=!S.settings.sortByPlace;persist();renderPoints();
   },
@@ -649,7 +649,7 @@ const UI={
     document.documentElement.style.fontSize=map[S.settings.font]||"16px";
   },
 
-  /* Prze\u0142\u0105cznik rozstrzygania remis\u00f3w bezpo\u015brednimi pojedynkami \u2014 suwak, bez potwierdzenia. */
+  /* Przełącznik rozstrzygania remisów bezpośrednimi pojedynkami — suwak, bez potwierdzenia. */
   toggleH2H(fromModal){
     const c=cur();if(!c)return;
     const reopen=()=>{if(fromModal===true)UI.tieRules();};
@@ -671,22 +671,22 @@ const UI={
     const end=g.start+g.nums.length-1;
     const currentPick=c.overrides[num];
 
-    let html="<h3>Rozstrzygni\u0119cie miejsca</h3>";
+    let html="<h3>Rozstrzygnięcie miejsca</h3>";
     if(c.h2h){
       const pts=h2hPoints(c,g.nums);
       const sorted=[...g.nums].sort((a,b)=>pts[b]-pts[a]);
-      html+="<p style='text-align:center;color:var(--text-muted);font-size:0.78rem;margin:0 0 6px'>Bezpo\u015brednie pojedynki \u2014 punkty wirtualne:</p>";
+      html+="<p style='text-align:center;color:var(--text-muted);font-size:0.78rem;margin:0 0 6px'>Bezpośrednie pojedynki — punkty wirtualne:</p>";
       html+="<div style='border:1px solid var(--border-color);border-radius:10px;margin:0 0 12px;overflow:hidden'>";
       html+=sorted.map(n=>"<div style='display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border-color);font-size:0.85rem"+(n===num?";background:rgba(56,189,248,0.12)":"")+"'><span><span class='ridernum'>"+n+"</span>"+escq(c.mapping[n]||"?")+"</span><b>"+pts[n]+" pkt</b></div>").join("");
       html+="</div>";
     }
-    html+="<p style='text-align:center;'>Wybierz dok\u0142adne miejsce dla zawodnika nr <b>"+num+" ("+escq(c.mapping[num]||"?")+")</b>:</p>";
+    html+="<p style='text-align:center;'>Wybierz dokładne miejsce dla zawodnika nr <b>"+num+" ("+escq(c.mapping[num]||"?")+")</b>:</p>";
     
     for(let p=g.start;p<=end;p++){
       html+="<button class='btn "+(currentPick===p?"primary":"")+"' data-onclick='UI.setTieOverride("+num+","+p+")'>Miejsce "+p+"</button>";
     }
     if(currentPick){
-      html+="<button class='btn danger' data-onclick='UI.clearTieOverride("+num+")'>Cofnij wyb\u00f3r (Przywr\u00f3\u0107 "+g.start+"\u2013"+end+")</button>";
+      html+="<button class='btn danger' data-onclick='UI.clearTieOverride("+num+")'>Cofnij wybór (Przywróć "+g.start+"–"+end+")</button>";
     }
     html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
     UI.openModal(html);
@@ -732,7 +732,7 @@ const UI={
       h.order=[...fins,...marks];
     });
     if(!ok)return;
-    /* Celowana aktualizacja tylko tej karty biegu \u2014 bez przerysowania ca\u0142ej listy. */
+    /* Celowana aktualizacja tylko tej karty biegu — bez przerysowania całej listy. */
     updateHeatCard(h);
   },
 
@@ -742,7 +742,7 @@ const UI={
     const base=standings(c,20);const arr=Object.values(base).sort(cmpStats).map(r=>r.num);
     const need20=heats.filter(x=>!x.extra&&x.n<=20).every(x=>x.confirmed);
     
-    if(!need20&&(c.format>20 || h.extra)){UI.toast("Zatwierd\u017a najpierw biegi 1\u201320.");return;}
+    if(!need20&&(c.format>20 || h.extra)){UI.toast("Zatwierdź najpierw biegi 1–20.");return;}
 
     let pool=[];
     if(h.extra){
@@ -751,7 +751,7 @@ const UI={
       if(heatN<=22) pool=arr.slice(2,10);
       else {
         const h21=heats.find(x=>x.n===21), h22=heats.find(x=>x.n===22);
-        if(!h21.confirmed||!h22.confirmed){UI.toast("Zatwierd\u017a najpierw biegi 21 i 22.");return;}
+        if(!h21.confirmed||!h22.confirmed){UI.toast("Zatwierdź najpierw biegi 21 i 22.");return;}
         const w21=Number(Object.entries(heatResults(h21)).find(([,v])=>v.pts===3)?.[0]);
         const w22=Number(Object.entries(heatResults(h22)).find(([,v])=>v.pts===3)?.[0]);
         pool=[arr[0],arr[1],w21,w22].filter(Boolean);
@@ -760,7 +760,7 @@ const UI={
       if(heatN===21) pool=arr.slice(2,6);
       else if(heatN===22){
         const h21=heats.find(x=>x.n===21);
-        if(!h21.confirmed){UI.toast("Zatwierd\u017a najpierw bieg 21.");return;}
+        if(!h21.confirmed){UI.toast("Zatwierdź najpierw bieg 21.");return;}
         const top2=(heatFinishOrder(h21)||[]).slice(0,2);
         pool=[...new Set([arr[0],arr[1],...top2])].filter(n=>n!==undefined&&n!==null);
       }
@@ -777,9 +777,9 @@ const UI={
       }
     }
 
-    let html="<h3>Wyb\u00f3r zawodnika \u2014 bieg "+getHeatLabel(h)+"</h3>";
-    if(!opts.length) html+="<p style='text-align:center;color:var(--text-muted)'>Brak dost\u0119pnych zawodnik\u00f3w.</p>";
-    else html+=opts.map(n=>"<button class='btn' data-onclick='UI.setOpenRider("+heatN+","+slotIdx+","+n+")'>"+n+" \u2014 "+escq(c.mapping[n]||"?")+"</button>").join("");
+    let html="<h3>Wybór zawodnika — bieg "+getHeatLabel(h)+"</h3>";
+    if(!opts.length) html+="<p style='text-align:center;color:var(--text-muted)'>Brak dostępnych zawodników.</p>";
+    else html+=opts.map(n=>"<button class='btn' data-onclick='UI.setOpenRider("+heatN+","+slotIdx+","+n+")'>"+n+" — "+escq(c.mapping[n]||"?")+"</button>").join("");
     html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
     UI.openModal(html);
   },
@@ -795,12 +795,12 @@ const UI={
     const c=cur();if(!c)return;
     const h=compHeats(c).find(x=>x.n===heatN);
     const e=h.entries[slotIdx];
-    let html="<h3>Wykluczenie \u2014 "+escq(c.mapping[e.rider]||"?")+"</h3>";
+    let html="<h3>Wykluczenie — "+escq(c.mapping[e.rider]||"?")+"</h3>";
     if(e.mark){
-      html+="<p style='text-align:center;font-size:0.78rem;color:var(--text-muted);margin:0 0 10px'>Obecnie: <b>"+escq(e.mark)+"</b>"+(e.repl?" (zast. "+escq(c.mapping[e.repl]||"?")+")":"")+". Wybierz inny kod, aby go zmieni\u0107"+(SUB_CODES.includes(e.mark)?" (ten sam kod \u2014 zmiana zast\u0119pcy)":"")+".</p>";
+      html+="<p style='text-align:center;font-size:0.78rem;color:var(--text-muted);margin:0 0 10px'>Obecnie: <b>"+escq(e.mark)+"</b>"+(e.repl?" (zast. "+escq(c.mapping[e.repl]||"?")+")":"")+". Wybierz inny kod, aby go zmienić"+(SUB_CODES.includes(e.mark)?" (ten sam kod — zmiana zastępcy)":"")+".</p>";
     }
     html+=MARKS.map((m,mi)=>"<button class='btn small "+(e.mark===m?"primary":"")+"' style='margin:3px;width:auto' data-onclick='UI.setMarkIdx("+heatN+","+slotIdx+","+mi+")'>"+m+"</button>").join("");
-    if(e.mark)html+="<button class='btn danger' data-onclick='UI.setMark("+heatN+","+slotIdx+",null)'>Usu\u0144 wykluczenie</button>";
+    if(e.mark)html+="<button class='btn danger' data-onclick='UI.setMark("+heatN+","+slotIdx+",null)'>Usuń wykluczenie</button>";
     html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
     UI.openModal(html);
   },
@@ -808,8 +808,8 @@ const UI={
   setMark(heatN,slotIdx,mark){
     const c=cur();const h=compHeats(c).find(x=>x.n===heatN);
     const e=h.entries[slotIdx];
-    /* Zabezpieczenie: nie wolno oznacza\u0107 wpisu zast\u0119pstwa (zagnie\u017cd\u017cone zast\u0119pstwo psuje model). */
-    if(e.replOf!==undefined&&e.replOf!==null){UI.toast("Nie mo\u017cna oznaczy\u0107 zast\u0119pcy \u2014 usu\u0144 zast\u0119pstwo i oznacz ponownie.");return;}
+    /* Zabezpieczenie: nie wolno oznaczać wpisu zastępstwa (zagnieżdżone zastępstwo psuje model). */
+    if(e.replOf!==undefined&&e.replOf!==null){UI.toast("Nie można oznaczyć zastępcy — usuń zastępstwo i oznacz ponownie.");return;}
     const hadMark=!!e.mark;
     if(!mutate(()=>{
       removeRepl(h,slotIdx);
@@ -823,9 +823,9 @@ const UI={
     if(!SUB_CODES.includes(mark)){UI.closeModal();return;}
 
     const pool=[17,18].filter(n=>c.mapping[n]&&!h.entries.some(x=>x.rider===n&&(!x.mark||x.replOf!==undefined&&x.replOf!==null)));
-    let html="<h3>Wyb\u00f3r zast\u0119pstwa</h3><p style='text-align:center'>Oznaczenie: <b>"+escq(mark)+"</b></p>";
+    let html="<h3>Wybór zastępstwa</h3><p style='text-align:center'>Oznaczenie: <b>"+escq(mark)+"</b></p>";
     if(pool.length)html+=pool.map(n=>"<button class='btn' data-onclick='UI.setRepl("+heatN+","+slotIdx+","+n+")'>Nr "+n+" ("+escq(c.mapping[n])+")</button>").join("");
-    html+="<button class='btn' data-onclick='UI.setRepl("+heatN+","+slotIdx+",null)'>Bez zast\u0119pstwa</button>";
+    html+="<button class='btn' data-onclick='UI.setRepl("+heatN+","+slotIdx+",null)'>Bez zastępstwa</button>";
     UI.openModal(html);
   },
   setRepl(heatN,slotIdx,num){
@@ -845,21 +845,21 @@ const UI={
   confirmHeat(heatN){
     const c=cur();const h=compHeats(c).find(x=>x.n===heatN);
     const isBase=e=>e.replOf===undefined||e.replOf===null;
-    /* Kto faktycznie jedzie: podstawowi bez oznaczenia + zast\u0119pcy (wpisy zast\u0119pstwa).
-       Oznaczony zawodnik NIE jedzie \u2014 jego jazd\u0119 reprezentuje jedynie wpis zast\u0119pstwa.
-       Zast\u0119pstwo = dok\u0142adnie jedna jazda, nigdy dwie. */
+    /* Kto faktycznie jedzie: podstawowi bez oznaczenia + zastępcy (wpisy zastępstwa).
+       Oznaczony zawodnik NIE jedzie — jego jazdę reprezentuje jedynie wpis zastępstwa.
+       Zastępstwo = dokładnie jedna jazda, nigdy dwie. */
     const riders=[];
     h.entries.forEach(e=>{
       if(!isBase(e)){riders.push(e.rider);return;}
       if(!e.mark)riders.push(e.rider);
     });
-    if(h.entries.some(e=>isBase(e)&&e.rider===null)){UI.toast("Uzupe\u0142nij obsad\u0119 wy\u015bcigu.");return;}
-    if(riders.some(r=>r===null)){UI.toast("Uzupe\u0142nij obsad\u0119 wy\u015bcigu.");return;}
-    if(new Set(riders).size!==riders.length){UI.toast("Zawodnik nie mo\u017ce jecha\u0107 dwukrotnie.");return;}
+    if(h.entries.some(e=>isBase(e)&&e.rider===null)){UI.toast("Uzupełnij obsadę wyścigu.");return;}
+    if(riders.some(r=>r===null)){UI.toast("Uzupełnij obsadę wyścigu.");return;}
+    if(new Set(riders).size!==riders.length){UI.toast("Zawodnik nie może jechać dwukrotnie.");return;}
 
     if(!mutate(()=>{normalizeOrder(h);h.confirmed=true;}))return;
     scheduleRenders();
-    /* Automatyczne przej\u015bcie do nast\u0119pnego (otwartego) biegu po zatwierdzeniu. */
+    /* Automatyczne przejście do następnego (otwartego) biegu po zatwierdzeniu. */
     const heats=compHeats(c);
     const next=heats.find(x=>!x.confirmed&&x.n>h.n&&!x.extra)||heats.find(x=>!x.confirmed&&!x.extra);
     if(next){
@@ -876,7 +876,7 @@ const UI={
   resetHeat(heatN){
     const c=cur();if(!c)return;
     const h=compHeats(c).find(x=>x.n===heatN);
-    UI.confirm("Zresetowa\u0107 bieg "+getHeatLabel(h)+" do stanu sprzed wy\u015bcigu?",()=>{
+    UI.confirm("Zresetować bieg "+getHeatLabel(h)+" do stanu sprzed wyścigu?",()=>{
       if(!mutate(()=>{
         h.entries=h.entries.filter(e=>e.replOf===undefined||e.replOf===null);
         h.entries.forEach(e=>{
@@ -893,7 +893,7 @@ const UI={
 
   resetAllHeats(){
     const c=cur();if(!c)return;
-    UI.confirm("Zresetowa\u0107 WSZYSTKIE wy\u015bcigi do stanu sprzed zawod\u00f3w? Wyniki, oznaczenia i biegi dodatkowe zostan\u0105 usuni\u0119te. Tej operacji nie mo\u017cna cofn\u0105\u0107.",()=>{
+    UI.confirm("Zresetować WSZYSTKIE wyścigi do stanu sprzed zawodów? Wyniki, oznaczenia i biegi dodatkowe zostaną usunięte. Tej operacji nie można cofnąć.",()=>{
       if(!mutate(()=>{
         c.heats=c.heats.filter(h=>!h.extra);
         c.heats.forEach(h=>{
@@ -910,15 +910,15 @@ const UI={
         delete c.markSeq;
       }))return;
       scheduleRenders();
-      UI.toast("Zresetowano wszystkie wy\u015bcigi.");
+      UI.toast("Zresetowano wszystkie wyścigi.");
     });
   },
 
   editHeatTime(heatN){
     const c=cur();if(!c)return;
     const h=compHeats(c).find(x=>x.n===heatN);
-    /* Stan roboczy wewn\u0105trz modu\u0142u UI (nie na window). Czas trzymany jako liczba ca\u0142kowita
-       milisekund \u2014 trzy ostatnie wpisane cyfry zawsze l\u0105duj\u0105 po przecinku (np. 64,254). */
+    /* Stan roboczy wewnątrz modułu UI (nie na window). Czas trzymany jako liczba całkowita
+       milisekund — trzy ostatnie wpisane cyfry zawsze lądują po przecinku (np. 64,254). */
     UI._timeHeatN=heatN;
     UI._timeMs=h.time?Math.round(parseFloat(h.time.replace(",","."))*1000):0;
     let html="<h3>Czas biegu "+getHeatLabel(h)+"</h3>";
@@ -926,14 +926,14 @@ const UI={
     html+="<div class='timedisplay' id='timeVal'>"+fmtHeatTime(UI._timeMs)+"</div>";
     html+="<div class='numpad'>";
     for(let d=1;d<=9;d++)html+="<button class='btn' data-onclick='UI.timeDigit("+d+")'>"+d+"</button>";
-    html+="<button class='btn secondary' data-onclick='UI.timeBackspace()'>\u232b</button>";
+    html+="<button class='btn secondary' data-onclick='UI.timeBackspace()'>⌫</button>";
     html+="<button class='btn' data-onclick='UI.timeDigit(0)'>0</button>";
     html+="<button class='btn danger' data-onclick='UI.timeClear()'>C</button>";
     html+="</div>";
     html+="<button class='btn primary' style='margin-top:14px' data-onclick='UI.saveHeatTime()'>Zapisz</button>";
     html+="<button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>";
     UI.openModal(html);
-    /* Klawiatura fizyczna dzia\u0142a r\u00f3wnolegle do numpada na ekranie \u2014 te same funkcje. */
+    /* Klawiatura fizyczna działa równolegle do numpada na ekranie — te same funkcje. */
     UI._timeKeyHandler=ev=>{
       if(ev.key>="0"&&ev.key<="9"){ev.preventDefault();UI.timeDigit(+ev.key);}
       else if(ev.key==="Backspace"||ev.key==="Delete"){ev.preventDefault();UI.timeBackspace();}
@@ -943,7 +943,7 @@ const UI={
   },
   timeDigit(d){
     const t=(UI._timeMs||0)*10+d;
-    if(t>99999)return; /* maks. 5 cyfr: 99,999 s \u2014 tyle wystarczy na realny czas biegu */
+    if(t>99999)return; /* maks. 5 cyfr: 99,999 s — tyle wystarczy na realny czas biegu */
     UI._timeMs=t;
     const el=$("timeVal");if(el)el.textContent=fmtHeatTime(t);
   },
@@ -971,13 +971,13 @@ const UI={
     const c=cur();if(!c)return;
     const heats=compHeats(c);
     const need20=heats.filter(x=>!x.extra&&x.n<=20).every(x=>x.confirmed);
-    if(!need20){UI.toast("Zatwierd\u017a najpierw biegi 1\u201320.");return;}
+    if(!need20){UI.toast("Zatwierdź najpierw biegi 1–20.");return;}
 
-    let html="<h3>Wy\u015bcig dodatkowy</h3>";
-    html+="<p style='text-align:center;margin-bottom:12px;'>Wybierz liczb\u0119 zawodnik\u00f3w:</p>";
-    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(2)'>2 zawodnik\u00f3w</button>";
-    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(3)'>3 zawodnik\u00f3w</button>";
-    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(4)'>4 zawodnik\u00f3w</button>";
+    let html="<h3>Wyścig dodatkowy</h3>";
+    html+="<p style='text-align:center;margin-bottom:12px;'>Wybierz liczbę zawodników:</p>";
+    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(2)'>2 zawodników</button>";
+    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(3)'>3 zawodników</button>";
+    html+="<button class='btn primary' data-onclick='UI.addExtraHeat(4)'>4 zawodników</button>";
     html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
     UI.openModal(html);
   },
@@ -998,7 +998,7 @@ const UI={
       heats.push({n,extra:true,confirmed:false,order,entries});
     }))return;
     UI.closeModal();scheduleRenders();
-    UI.toast("Dodano wy\u015bcig dodatkowy D"+count);
+    UI.toast("Dodano wyścig dodatkowy D"+count);
   },
 
   removeExtraHeat(heatN){
@@ -1006,15 +1006,15 @@ const UI={
     const idx=c.heats.findIndex(x=>x.n===heatN);
     if(idx<0||!c.heats[idx].extra)return;
     const lbl=getHeatLabel(c.heats[idx]);
-    UI.confirm("Usun\u0105\u0107 wy\u015bcig dodatkowy "+lbl+"? Wszystkie jego wyniki zostan\u0105 utracone.",()=>{
+    UI.confirm("Usunąć wyścig dodatkowy "+lbl+"? Wszystkie jego wyniki zostaną utracone.",()=>{
       if(!mutate(()=>{
         c.heats.splice(idx,1);
-        /* Ponumerowanie pozosta\u0142ych bieg\u00f3w dodatkowych: D1, D2, ... */
+        /* Ponumerowanie pozostałych biegów dodatkowych: D1, D2, ... */
         let i=0;
         c.heats.forEach(h=>{if(h.extra){i++;h.n=100+i;}});
       }))return;
       scheduleRenders();
-      UI.toast("Usuni\u0119to wy\u015bcig "+lbl+".");
+      UI.toast("Usunięto wyścig "+lbl+".");
     });
   }
 };
@@ -1023,13 +1023,13 @@ UI.tieRules=function(){
   const c=cur();if(!c)return;
   const lb="font-size:0.8rem;font-weight:800;color:var(--text-muted)";
   UI.openModal("<h3>Remisy w klasyfikacji</h3>"+
-    "<p style='font-size:0.75rem;color:var(--text-muted);text-align:center;margin:0 0 8px;font-weight:700;letter-spacing:0.5px'>DECYDUJ\u0104 BEZPO\u015aREDNIE POJEDYNKI</p>"+
+    "<p style='font-size:0.75rem;color:var(--text-muted);text-align:center;margin:0 0 8px;font-weight:700;letter-spacing:0.5px'>DECYDUJĄ BEZPOŚREDNIE POJEDYNKI</p>"+
     "<div style='display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 12px'>"+
       "<span style='"+lb+"'>NIE</span>"+
-      "<div class='switch"+(c.h2h?" on":"")+"' id='h2hSwitchM' role='switch' tabindex='0' aria-checked='"+(c.h2h?"true":"false")+"' aria-label='Decyduj\u0105 bezpo\u015brednie pojedynki' data-onclick='UI.toggleH2H(true)'><div class='knob'></div></div>"+
+      "<div class='switch"+(c.h2h?" on":"")+"' id='h2hSwitchM' role='switch' tabindex='0' aria-checked='"+(c.h2h?"true":"false")+"' aria-label='Decydują bezpośrednie pojedynki' data-onclick='UI.toggleH2H(true)'><div class='knob'></div></div>"+
       "<span style='"+lb+"'>TAK</span>"+
     "</div>"+
-    "<p style='font-size:0.78rem;color:var(--text-muted);text-align:center;margin:0 0 14px'>Gdy w\u0142\u0105czone, remisy w punktach rozstrzygaj\u0105 wyniki bieg\u00f3w, w kt\u00f3rych zremisowani zawodnicy jechali razem. Mo\u017cna to zmieni\u0107 w ka\u017cdej chwili \u2014 klasyfikacja przelicza si\u0119 od razu.</p>"+
+    "<p style='font-size:0.78rem;color:var(--text-muted);text-align:center;margin:0 0 14px'>Gdy włączone, remisy w punktach rozstrzygają wyniki biegów, w których zremisowani zawodnicy jechali razem. Można to zmienić w każdej chwili — klasyfikacja przelicza się od razu.</p>"+
     "<button class='btn primary' data-onclick='UI.closeModal()'>Gotowe</button>");
 };
 UI.syncH2H=function(){
@@ -1040,9 +1040,9 @@ UI.syncH2H=function(){
 function renderRiderLib(){
   const el=$("riderList");
   const series=S.uiSeries;
-  $("ridersTitle").textContent=series?("Zawodnicy \u2014 "+series):"Zawodnicy";
+  $("ridersTitle").textContent=series?("Zawodnicy — "+series):"Zawodnicy";
   const list=series?(S.rosters[series]||[]):S.riders;
-  if(!list.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zawodnik\u00f3w na li\u015bcie.</p>";return;}
+  if(!list.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zawodników na liście.</p>";return;}
   el.innerHTML=list.map(name=>{
     const gi=S.riders.indexOf(name);
     const club=teamOfRider(name);
@@ -1053,7 +1053,7 @@ function renderRiderLib(){
       "<button class='btn small "+(isJr?"primary":"secondary")+"' data-lib-j='"+gi+"'>J</button> "+
       "<button class='btn small' data-edit-rider='"+gi+"'>Edytuj</button>"+(series?"<button class='btn small danger' data-rr-name='"+escq(name)+"'>X</button>":"")+"</span></div>";
   }).join("");
-  /* Nazwisko trafia do data-atrybutu (bezpieczny kontekst HTML) \u2014 nigdy do inline JS. */
+  /* Nazwisko trafia do data-atrybutu (bezpieczny kontekst HTML) — nigdy do inline JS. */
   el.querySelectorAll("[data-edit-rider]").forEach(b=>b.onclick=()=>UI.editRider(+b.dataset.editRider));
   el.querySelectorAll("[data-rr-name]").forEach(b=>b.onclick=()=>UI.removeRosterRider(b.dataset.rrName));
   el.querySelectorAll("[data-lib-s]").forEach(b=>b.onclick=()=>{
@@ -1068,20 +1068,20 @@ function renderRiderLib(){
 
 function renderSaved(){
   const el=$("savedList");const ids=Object.keys(S.comps||{});
-  if(!ids.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zapisanych zawod\u00f3w.</p>";return;}  el.innerHTML=ids.map(id=>{
+  if(!ids.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zapisanych zawodów.</p>";return;}  el.innerHTML=ids.map(id=>{
     const c=S.comps[id];
-    const title=c.league?((c.home&&c.home.name)+" \u2013 "+(c.away&&c.away.name)):(c.name||("Zawody "+c.format+"-biegowe"));
-    const meta=c.league?"Mecz ligowy \u00b7 15 wy\u015bcig\u00f3w":(c.format+"-biegowe");
+    const title=c.league?((c.home&&c.home.name)+" – "+(c.away&&c.away.name)):(c.name||("Zawody "+c.format+"-biegowe"));
+    const meta=c.league?"Mecz ligowy · 15 wyścigów":(c.format+"-biegowe");
     return "<div class='saved-item'>"+
       "<div class='saved-info'>"+
         "<span class='saved-title'>"+escq(title)+"</span>"+
         "<span class='saved-meta'>"+meta+"</span>"+
       "</div>"+
       "<div class='saved-actions'>"+
-        "<button class='btn small primary' data-open=\""+escq(id)+"\">Otw\u00f3rz</button>"+
+        "<button class='btn small primary' data-open=\""+escq(id)+"\">Otwórz</button>"+
         (store.get(LS+".prestart."+id)!=null?"<button class='btn small secondary' data-prestart=\""+escq(id)+"\">Sprzed startu</button>":"")+
-        "<button class='btn small secondary' data-rename=\""+escq(id)+"\">Zmie\u0144 nazw\u0119</button>"+
-        "<button class='btn small danger' data-del=\""+escq(id)+"\">Usu\u0144</button>"+
+        "<button class='btn small secondary' data-rename=\""+escq(id)+"\">Zmień nazwę</button>"+
+        "<button class='btn small danger' data-del=\""+escq(id)+"\">Usuń</button>"+
       "</div>"+
     "</div>";
   }).join("");
@@ -1116,7 +1116,7 @@ UI.delComp=function(id){
     renderSaved();});
 };
 
-/* Ekran g\u0142\u00f3wny: przycisk \u201eKontynuuj" dla ostatnio otwartych zawod\u00f3w. */
+/* Ekran główny: przycisk „Kontynuuj" dla ostatnio otwartych zawodów. */
 function renderHome(){
   const b=$("continueBtn"),nb=$("newCompBtn");if(!b||!nb)return;
   const id=S.settings.lastComp;const c=id&&S.comps[id];
@@ -1124,20 +1124,20 @@ function renderHome(){
   let heats,title,prog;
   if(c.league){
     heats=c.match?c.match.heats:[];
-    title=(c.home&&c.home.name)+" \u2013 "+(c.away&&c.away.name);
+    title=(c.home&&c.home.name)+" – "+(c.away&&c.away.name);
     const last=heats.filter(h=>h.confirmed).reduce((m,h)=>Math.max(m,h.n),0);
-    prog=last>0?("po wy\u015bcigu "+last+"/15"):"przed startem";
+    prog=last>0?("po wyścigu "+last+"/15"):"przed startem";
   }else{
     heats=compHeats(c);
     if(c.launched&&heats.length&&heats.every(h=>h.confirmed)){b.style.display="none";nb.classList.add("primary");return;}
     const last=heats.filter(h=>h.confirmed&&!h.extra).reduce((m,h)=>Math.max(m,h.n),0);
     title=c.name||("Zawody "+c.format+"-biegowe");
-    prog=c.launched?(last>0?("po wy\u015bcigu "+last+"/"+c.format):"przed startem"):"przypisywanie numer\u00f3w";
+    prog=c.launched?(last>0?("po wyścigu "+last+"/"+c.format):"przed startem"):"przypisywanie numerów";
   }
-  b.innerHTML="<span>\u25b6 Kontynuuj</span><small style='text-transform:none;font-weight:600;opacity:0.8'>"+escq(title)+" \u00b7 "+escq(prog)+"</small>";
+  b.innerHTML="<span>▶ Kontynuuj</span><small style='text-transform:none;font-weight:600;opacity:0.8'>"+escq(title)+" · "+escq(prog)+"</small>";
   b.style.display="flex";nb.classList.remove("primary");
 }
-/* Przewini\u0119cie ekranu wy\u015bcig\u00f3w do pierwszego otwartego biegu (albo do ko\u0144ca listy, gdy wszystkie zatwierdzone). */
+/* Przewinięcie ekranu wyścigów do pierwszego otwartego biegu (albo do końca listy, gdy wszystkie zatwierdzone). */
 function scrollToCurrentHeat(){
   const c=cur();if(!c||!$("races").classList.contains("on"))return;
   const heats=compHeats(c);
@@ -1149,7 +1149,7 @@ function scrollToCurrentHeat(){
   el.scrollIntoView({block:"start"});
 }
 
-/* Od\u015bwie\u017ca etykiety opcji aplikacji w USTAWIENIACH. */
+/* Odświeża etykiety opcji aplikacji w USTAWIENIACH. */
 function renderSettings(){
   ["S","M","L"].forEach(sz=>{
     const b=$("font"+sz);
@@ -1166,7 +1166,7 @@ function renderLineup(){
     const name=c.mapping[n]||"";
     html+="<tr><td class='num'>"+n+"</td><td style='text-align:left'>"+
       "<button class='btn small' style='width:100%;text-transform:none;font-size:0.85rem' data-onclick='UI.pickLineup("+n+")'>"+
-      (name?escq(name):"\u2014 Wybierz \u2014")+"</button></td></tr>";
+      (name?escq(name):"— Wybierz —")+"</button></td></tr>";
   });
   html+="</table>";
   $("lineupList").innerHTML=html;
@@ -1175,7 +1175,7 @@ function renderLineup(){
 function renderPoints(){
   const c=cur();if(!c){UI.screen("home");return;}
   const heats=compHeats(c);
-  /* Stopie\u0144 zaawansowania zawod\u00f3w w nag\u0142\u00f3wku: ostatni zatwierdzony bieg zwyk\u0142y. */
+  /* Stopień zaawansowania zawodów w nagłówku: ostatni zatwierdzony bieg zwykły. */
   const done=heats.filter(h=>h.confirmed&&!h.extra).length;
   const last=heats.filter(h=>h.confirmed&&!h.extra).reduce((m,h)=>Math.max(m,h.n),0);
   const total=c.format;
@@ -1188,7 +1188,7 @@ function renderPoints(){
   const st=standings(c);
   const groups=placeGroups(c);
   const tieSet=new Set();groups.forEach(g=>{if(g.nums.length>1)g.nums.forEach(n=>tieSet.add(n));});
-  /* Kolejno\u015b\u0107 wierszy: numery startowe albo realna kolejno\u015b\u0107 w klasyfikacji. */
+  /* Kolejność wierszy: numery startowe albo realna kolejność w klasyfikacji. */
   let order=[...Array(18)].map((_,i)=>i+1).filter(n=>c.mapping[n]);
   if(S.settings.sortByPlace)order=groups.flatMap(g=>[...g.nums].sort((a,b)=>a-b));
   
@@ -1199,7 +1199,7 @@ function renderPoints(){
   html+="</tr>";
 
   order.forEach(n=>{
-    const nm=String(c.mapping[n]||"\u2014");
+    const nm=String(c.mapping[n]||"—");
     const sp=nm.indexOf(" ");
     const nmHtml=sp>0?("<span style='display:block'>"+escq(nm.slice(0,sp))+"</span><span style='display:block'>"+escq(nm.slice(sp+1))+"</span>"):escq(nm);
     html+="<tr>";
@@ -1208,11 +1208,11 @@ function renderPoints(){
     html+="<td><b>"+(s?s.pts:0)+"</b></td>";
     
     const plcTxt=placeLabel(c,n,groups);
-    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" \u2014 rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
+    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" — rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
     
     heats.forEach(h=>{
       const gi=h.entries.findIndex(e=>e.rider===n||e.repl===n);
-      let cell="<span class='cell' style='color:var(--text-muted)'>\u00b7</span>";
+      let cell="<span class='cell' style='color:var(--text-muted)'>·</span>";
       if(gi>=0){
         const gate=h.entries[gi].gate;const cls="m"+(GATES.includes(gate)?gate:"A");
         if(h.confirmed){
@@ -1233,7 +1233,7 @@ function renderPoints(){
 
 function attachPlaceTap(){
   document.querySelectorAll("td.plc.tie").forEach(td=>{
-    td.title="Kliknij, aby rozstrzygn\u0105\u0107 remis";
+    td.title="Kliknij, aby rozstrzygnąć remis";
     td.addEventListener("click",()=>UI.resolveTie(+td.dataset.rider));
   });
 }
@@ -1258,7 +1258,7 @@ function riderPicker(opts){
     html+="<p style='text-align:center;color:var(--text-muted)'>Brak zawodnikÃ³w do wyboru.</p>";
   }else{
     const letters=[];names.forEach(n=>{const l=rpLetter(n);if(!letters.includes(l))letters.push(l);});
-    html+="<label for='riderSearch' class='sr-label'>Szukaj zawodnika</label><input type='text' id='riderSearch' placeholder='Szukaj zawodnika\u2026' autocomplete='off' style='margin-bottom:10px'>";
+    html+="<label for='riderSearch' class='sr-label'>Szukaj zawodnika</label><input type='text' id='riderSearch' placeholder='Szukaj zawodnika…' autocomplete='off' style='margin-bottom:10px'>";
     html+="<div class='rp-wrap'><div class='rp-list' id='rpList'>"+
       names.map((n,i)=>"<button class='btn' style='text-transform:none' data-i='"+i+"' data-l='"+escq(rpLetter(n))+"' data-s='"+escq(rpNorm(n))+"'>"+escq(n)+"</button>").join("")+
       "</div><div class='rp-index' id='rpIndex'>"+
@@ -1295,7 +1295,7 @@ function riderPicker(opts){
   });
 }
 
-/* Sanityzacja tekstu od u\u017cytkownika: przyci\u0119cie, limit d\u0142ugo\u015bci, usuni\u0119cie znak\u00f3w kontrolnych. */
+/* Sanityzacja tekstu od użytkownika: przycięcie, limit długości, usunięcie znaków kontrolnych. */
 function cleanText(v,max){
   return String(v||"").replace(/[\u0000-\u001F\u007F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,"").trim().slice(0,max||100);
 }
@@ -1312,102 +1312,102 @@ function validateData(d){
   const isObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
   const okNum=k=>/^([1-9]|1[0-8])$/.test(k);
   if(!isObj(d))return "to nie obiekt danych";
-  if(!Array.isArray(d.riders))return "brak listy zawodnik\u00f3w";
-  if(d.riders.length>IMPORT_LIMITS.riders)return "zbyt wielu zawodnik\u00f3w";
-  if(!d.riders.every(r=>typeof r==="string"&&r.length<=100))return "b\u0142\u0119dna lista zawodnik\u00f3w";
-  if(d.comps!==undefined&&!isObj(d.comps))return "b\u0142\u0119dny obiekt zawod\u00f3w";
+  if(!Array.isArray(d.riders))return "brak listy zawodników";
+  if(d.riders.length>IMPORT_LIMITS.riders)return "zbyt wielu zawodników";
+  if(!d.riders.every(r=>typeof r==="string"&&r.length<=100))return "błędna lista zawodników";
+  if(d.comps!==undefined&&!isObj(d.comps))return "błędny obiekt zawodów";
   if(d.teams!==undefined&&d.teams!==null){
-    if(!Array.isArray(d.teams))return "b\u0142\u0119dna lista dru\u017cyn";
-    if(d.teams.length>200)return "zbyt wiele dru\u017cyn";
+    if(!Array.isArray(d.teams))return "błędna lista drużyn";
+    if(d.teams.length>200)return "zbyt wiele drużyn";
     for(const t of d.teams){
-      if(!isObj(t))return "dru\u017cyna nie jest obiektem";
-      if(typeof t.name!=="string"||t.name.length>100)return "b\u0142\u0119dna nazwa dru\u017cyny";
-      if(!Array.isArray(t.riders)||t.riders.length>100)return "b\u0142\u0119dna lista zawodnik\u00f3w dru\u017cyny";
-      if(!t.riders.every(r=>typeof r==="string"&&r.length<=100))return "b\u0142\u0119dni zawodnicy dru\u017cyny";
+      if(!isObj(t))return "drużyna nie jest obiektem";
+      if(typeof t.name!=="string"||t.name.length>100)return "błędna nazwa drużyny";
+      if(!Array.isArray(t.riders)||t.riders.length>100)return "błędna lista zawodników drużyny";
+      if(!t.riders.every(r=>typeof r==="string"&&r.length<=100))return "błędni zawodnicy drużyny";
     }
   }
   if(d.juniors!==undefined&&d.juniors!==null){
-    if(!Array.isArray(d.juniors))return "b\u0142\u0119dna lista m\u0142odzie\u017cowc\u00f3w";
-    if(d.juniors.length>500)return "zbyt wielu m\u0142odzie\u017cowc\u00f3w";
-    if(!d.juniors.every(r=>typeof r==="string"&&r.length<=100))return "b\u0142\u0119dni m\u0142odzie\u017cowcy";
+    if(!Array.isArray(d.juniors))return "błędna lista młodzieżowców";
+    if(d.juniors.length>500)return "zbyt wielu młodzieżowców";
+    if(!d.juniors.every(r=>typeof r==="string"&&r.length<=100))return "błędni młodzieżowcy";
   }
   if(d.rosters!==undefined&&d.rosters!==null){
-    if(!isObj(d.rosters))return "b\u0142\u0119dne sk\u0142ady serii";
+    if(!isObj(d.rosters))return "błędne składy serii";
     for(const k of Object.keys(d.rosters)){
-      if(!Array.isArray(d.rosters[k])||d.rosters[k].length>500)return "b\u0142\u0119dny sk\u0142ad serii "+k.slice(0,10);
-      if(!d.rosters[k].every(r=>typeof r==="string"&&r.length<=100))return "b\u0142\u0119dny zawodnik w serii "+k.slice(0,10);
+      if(!Array.isArray(d.rosters[k])||d.rosters[k].length>500)return "błędny skład serii "+k.slice(0,10);
+      if(!d.rosters[k].every(r=>typeof r==="string"&&r.length<=100))return "błędny zawodnik w serii "+k.slice(0,10);
     }
   }
   const ids=Object.keys(d.comps||{});
-  if(ids.length>IMPORT_LIMITS.comps)return "zbyt wiele zawod\u00f3w";
+  if(ids.length>IMPORT_LIMITS.comps)return "zbyt wiele zawodów";
   for(const id of ids){
     if(!/^[A-Za-z0-9_-]{1,64}$/.test(id))return "zawody: niedozwolony identyfikator";
     const c=d.comps[id];
-    if(!isObj(c))return "zawody "+id+": nie s\u0105 obiektem";
+    if(!isObj(c))return "zawody "+id+": nie są obiektem";
     if(typeof c.id!=="string"||c.id!==id)return "zawody "+id+": niezgodne id";
-    if(c.league!==true&&!Array.isArray(c.heats))return "zawody "+id+": brak listy bieg\u00f3w";
-    if(c.league!==true&&c.heats.length>IMPORT_LIMITS.heats)return "zawody "+id+": zbyt wiele bieg\u00f3w";
+    if(c.league!==true&&!Array.isArray(c.heats))return "zawody "+id+": brak listy biegów";
+    if(c.league!==true&&c.heats.length>IMPORT_LIMITS.heats)return "zawody "+id+": zbyt wiele biegów";
     if(c.format!==20&&c.format!==22&&c.format!==23&&c.format!=="liga")return "zawody "+id+": nieznany format";
     if(c.league===true){
-      /* Mecz ligowy \u2014 lekka walidacja w\u0142asnego schematu; standardowe biegi nie obowi\u0105zuj\u0105. */
-      if(!isObj(c.home)||!isObj(c.away))return "zawody "+id+": brak dru\u017cyn meczu";
+      /* Mecz ligowy — lekka walidacja własnego schematu; standardowe biegi nie obowiązują. */
+      if(!isObj(c.home)||!isObj(c.away))return "zawody "+id+": brak drużyn meczu";
       for(const side of [c.home,c.away]){
-        if(typeof side.name!=="string"||side.name.length>100)return "zawody "+id+": b\u0142\u0119dna nazwa dru\u017cyny";
-        if(!isObj(side.lineup))return "zawody "+id+": brak sk\u0142adu dru\u017cyny";
+        if(typeof side.name!=="string"||side.name.length>100)return "zawody "+id+": błędna nazwa drużyny";
+        if(!isObj(side.lineup))return "zawody "+id+": brak składu drużyny";
         for(const k of Object.keys(side.lineup)){
           const v=side.lineup[k];
-          if(!/^([1-9]|1[0-6])$/.test(k))return "zawody "+id+": b\u0142\u0119dny numer w sk\u0142adzie";
-          if(v!==null&&(typeof v!=="string"||v.length>100))return "zawody "+id+": b\u0142\u0119dny zawodnik w sk\u0142adzie";
+          if(!/^([1-9]|1[0-6])$/.test(k))return "zawody "+id+": błędny numer w składzie";
+          if(v!==null&&(typeof v!=="string"||v.length>100))return "zawody "+id+": błędny zawodnik w składzie";
         }
       }
-      if(!isObj(c.match)||!Array.isArray(c.match.heats))return "zawody "+id+": brak bieg\u00f3w meczu";
-      if(c.match.heats.length>60)return "zawody "+id+": zbyt wiele bieg\u00f3w meczu";
+      if(!isObj(c.match)||!Array.isArray(c.match.heats))return "zawody "+id+": brak biegów meczu";
+      if(c.match.heats.length>60)return "zawody "+id+": zbyt wiele biegów meczu";
       for(const h of c.match.heats){
-        if(!isObj(h)||!isInt(h.n)||h.n<1||h.n>60)return "zawody "+id+": b\u0142\u0119dny bieg meczu";
-        if(!Array.isArray(h.slots)||h.slots.length>8)return "zawody "+id+": bieg "+h.n+": b\u0142\u0119dne pola";
+        if(!isObj(h)||!isInt(h.n)||h.n<1||h.n>60)return "zawody "+id+": błędny bieg meczu";
+        if(!Array.isArray(h.slots)||h.slots.length>8)return "zawody "+id+": bieg "+h.n+": błędne pola";
         for(const s of h.slots){
-          if(!isObj(s)||(s.num!==null&&(!isInt(s.num)||s.num<1||s.num>16)))return "zawody "+id+": bieg "+h.n+": b\u0142\u0119dny zawodnik";
-          if(s.subType!==null&&s.subType!==undefined&&(typeof s.subType!=="string"||!["RT","ZZ"].includes(s.subType)))return "zawody "+id+": bieg "+h.n+": b\u0142\u0119dny typ zmiany";
-          if(s.excl!==null&&s.excl!==undefined&&(typeof s.excl!=="string"||s.excl.length>8))return "zawody "+id+": bieg "+h.n+": b\u0142\u0119dne oznaczenie";
+          if(!isObj(s)||(s.num!==null&&(!isInt(s.num)||s.num<1||s.num>16)))return "zawody "+id+": bieg "+h.n+": błędny zawodnik";
+          if(s.subType!==null&&s.subType!==undefined&&(typeof s.subType!=="string"||!["RT","ZZ"].includes(s.subType)))return "zawody "+id+": bieg "+h.n+": błędny typ zmiany";
+          if(s.excl!==null&&s.excl!==undefined&&(typeof s.excl!=="string"||s.excl.length>8))return "zawody "+id+": bieg "+h.n+": błędne oznaczenie";
         }
-        if(!Array.isArray(h.order)||h.order.length!==h.slots.length||new Set(h.order).size!==h.slots.length||h.order.some(i=>!isInt(i)||i<0||i>=h.slots.length))return "zawody "+id+": bieg "+h.n+": \u0142\u0119dna kolejno\u015b\u0107";
-        if(h.time!==undefined&&h.time!==null&&(typeof h.time!=="string"||h.time.length>12))return "zawody "+id+": bieg "+h.n+": b\u0142\u0119dny czas";
+        if(!Array.isArray(h.order)||h.order.length!==h.slots.length||new Set(h.order).size!==h.slots.length||h.order.some(i=>!isInt(i)||i<0||i>=h.slots.length))return "zawody "+id+": bieg "+h.n+": łędna kolejność";
+        if(h.time!==undefined&&h.time!==null&&(typeof h.time!=="string"||h.time.length>12))return "zawody "+id+": bieg "+h.n+": błędny czas";
       }
       continue;
     }
-    if(c.name!==undefined&&c.name!==null&&(typeof c.name!=="string"||c.name.length>200))return "zawody "+id+": b\u0142\u0119dna nazwa";
+    if(c.name!==undefined&&c.name!==null&&(typeof c.name!=="string"||c.name.length>200))return "zawody "+id+": błędna nazwa";
     if(!isObj(c.mapping))return "zawody "+id+": brak mapowania";
     for(const k of Object.keys(c.mapping)){
-      if(!okNum(k))return "zawody "+id+": b\u0142\u0119dny numer w mapowaniu ("+k.slice(0,10)+")";
-      if(typeof c.mapping[k]!=="string"||c.mapping[k].length>100)return "zawody "+id+": b\u0142\u0119dne mapowanie nr "+k;
+      if(!okNum(k))return "zawody "+id+": błędny numer w mapowaniu ("+k.slice(0,10)+")";
+      if(typeof c.mapping[k]!=="string"||c.mapping[k].length>100)return "zawody "+id+": błędne mapowanie nr "+k;
     }
     if(c.overrides!==undefined&&c.overrides!==null){
-      if(!isObj(c.overrides))return "zawody "+id+": b\u0142\u0119dne nadpisania remis\u00f3w";
+      if(!isObj(c.overrides))return "zawody "+id+": błędne nadpisania remisów";
       for(const k of Object.keys(c.overrides)){
-        if(!okNum(k)||!isInt(c.overrides[k])||c.overrides[k]<1||c.overrides[k]>18)return "zawody "+id+": b\u0142\u0119dne nadpisanie remisu";
+        if(!okNum(k)||!isInt(c.overrides[k])||c.overrides[k]<1||c.overrides[k]>18)return "zawody "+id+": błędne nadpisanie remisu";
       }
     }
-    if(c.h2h!==undefined&&c.h2h!==null&&typeof c.h2h!=="boolean")return "zawody "+id+": b\u0142\u0119dna flaga pojedynk\u00f3w";
-    if(c.markSeq!==undefined&&!isInt(c.markSeq))return "zawody "+id+": b\u0142\u0119dny licznik oznacze\u0144";
+    if(c.h2h!==undefined&&c.h2h!==null&&typeof c.h2h!=="boolean")return "zawody "+id+": błędna flaga pojedynków";
+    if(c.markSeq!==undefined&&!isInt(c.markSeq))return "zawody "+id+": błędny licznik oznaczeń";
     for(const h of c.heats){
       if(!isObj(h))return "zawody "+id+": bieg nie jest obiektem";
       const n=h.n;
-      if(!isInt(n)||n<1||n>200||(n>60&&n<101))return "zawody "+id+": b\u0142\u0119dny numer biegu";
-      if(typeof h.extra!=="boolean"&&h.extra!==undefined)return "zawody "+id+": bieg "+n+": b\u0142\u0119dna flaga extra";
-      if(typeof h.confirmed!=="boolean"&&h.confirmed!==undefined)return "zawody "+id+": bieg "+n+": b\u0142\u0119dna flaga zatwierdzenia";
-      if(!Array.isArray(h.entries)||h.entries.length>IMPORT_LIMITS.entries)return "zawody "+id+": bieg "+n+": b\u0142\u0119dne wpisy";
-      if(!Array.isArray(h.order))return "zawody "+id+": bieg "+n+": brak kolejno\u015bci";
-      if(h.order.some(i=>!isInt(i)||i<0||i>=h.entries.length))return "zawody "+id+": bieg "+n+": b\u0142\u0119dna kolejno\u015b\u0107";
+      if(!isInt(n)||n<1||n>200||(n>60&&n<101))return "zawody "+id+": błędny numer biegu";
+      if(typeof h.extra!=="boolean"&&h.extra!==undefined)return "zawody "+id+": bieg "+n+": błędna flaga extra";
+      if(typeof h.confirmed!=="boolean"&&h.confirmed!==undefined)return "zawody "+id+": bieg "+n+": błędna flaga zatwierdzenia";
+      if(!Array.isArray(h.entries)||h.entries.length>IMPORT_LIMITS.entries)return "zawody "+id+": bieg "+n+": błędne wpisy";
+      if(!Array.isArray(h.order))return "zawody "+id+": bieg "+n+": brak kolejności";
+      if(h.order.some(i=>!isInt(i)||i<0||i>=h.entries.length))return "zawody "+id+": bieg "+n+": błędna kolejność";
       for(const e of h.entries){
         if(!isObj(e))return "zawody "+id+": bieg "+n+": wpis nie jest obiektem";
-        if(!GATES.includes(e.gate))return "zawody "+id+": bieg "+n+": b\u0142\u0119dny tor";
-        if(e.rider!==null&&(!isInt(e.rider)||e.rider<1||e.rider>18))return "zawody "+id+": bieg "+n+": b\u0142\u0119dny numer zawodnika";
-        if(e.mark!==null&&(typeof e.mark!=="string"||e.mark.length>8))return "zawody "+id+": bieg "+n+": b\u0142\u0119dne oznaczenie";
-        if(e.repl!==null&&e.repl!==undefined&&(!isInt(e.repl)||e.repl<1||e.repl>18))return "zawody "+id+": bieg "+n+": b\u0142\u0119dny zast\u0119pca";
-        if(e.replOf!==null&&e.replOf!==undefined&&(!isInt(e.replOf)||e.replOf<0||e.replOf>=h.entries.length))return "zawody "+id+": bieg "+n+": b\u0142\u0119dne odwo\u0142anie zast\u0119pstwa";
-        if(e.markSeq!==undefined&&!isInt(e.markSeq))return "zawody "+id+": bieg "+n+": b\u0142\u0119dny numer oznaczenia";
+        if(!GATES.includes(e.gate))return "zawody "+id+": bieg "+n+": błędny tor";
+        if(e.rider!==null&&(!isInt(e.rider)||e.rider<1||e.rider>18))return "zawody "+id+": bieg "+n+": błędny numer zawodnika";
+        if(e.mark!==null&&(typeof e.mark!=="string"||e.mark.length>8))return "zawody "+id+": bieg "+n+": błędne oznaczenie";
+        if(e.repl!==null&&e.repl!==undefined&&(!isInt(e.repl)||e.repl<1||e.repl>18))return "zawody "+id+": bieg "+n+": błędny zastępca";
+        if(e.replOf!==null&&e.replOf!==undefined&&(!isInt(e.replOf)||e.replOf<0||e.replOf>=h.entries.length))return "zawody "+id+": bieg "+n+": błędne odwołanie zastępstwa";
+        if(e.markSeq!==undefined&&!isInt(e.markSeq))return "zawody "+id+": bieg "+n+": błędny numer oznaczenia";
       }
-      if(h.time!==undefined&&h.time!==null&&(typeof h.time!=="string"||h.time.length>12))return "zawody "+id+": bieg "+n+": b\u0142\u0119dny czas";
+      if(h.time!==undefined&&h.time!==null&&(typeof h.time!=="string"||h.time.length>12))return "zawody "+id+": bieg "+n+": błędny czas";
     }
   }
   return null;
@@ -1421,7 +1421,7 @@ function renderRaces(){
   $("racesTitle").textContent="WyÅcigi";
   $("heatList").innerHTML=heats.map(h=>heatCardHtml(c,h,firstOpen)).join("");
 }
-/* Karta pojedynczego biegu \u2014 pozwala aktualizowa\u0107 tylko jeden bieg bez przerysowania ca\u0142ej listy. */
+/* Karta pojedynczego biegu — pozwala aktualizować tylko jeden bieg bez przerysowania całej listy. */
 function heatCardHtml(c,h,firstOpen){
     let html="";
     const active=(!h.confirmed&&(!firstOpen||h.n===firstOpen.n||h.extra));
@@ -1430,15 +1430,15 @@ function heatCardHtml(c,h,firstOpen){
     html+="<div id='heat-"+h.n+"' class='heat "+(h.confirmed?"done":"")+(active?" active":"")+(dim?" dim":"")+"'>";
     html+="<div class='heathead'><span class='heatnum'>BIEG "+heatLabel+(h.time?"<span class='heattime'>"+escq(h.time)+"</span>":"")+"</span>";
     html+="<div class='heatactions'>";
-    html+="<button class='iconbtn sm' title='Czas wy\u015bcigu' data-onclick='UI.editHeatTime("+h.n+")'>"+ICON_CLOCK+"</button>";
+    html+="<button class='iconbtn sm' title='Czas wyścigu' data-onclick='UI.editHeatTime("+h.n+")'>"+ICON_CLOCK+"</button>";
     if(h.extra){
-      html+="<button class='iconbtn sm' title='Usu\u0144 wy\u015bcig dodatkowy' style='color:var(--danger-fg)' data-onclick='UI.removeExtraHeat("+h.n+")'>"+ICON_X+"</button>";
+      html+="<button class='iconbtn sm' title='Usuń wyścig dodatkowy' style='color:var(--danger-fg)' data-onclick='UI.removeExtraHeat("+h.n+")'>"+ICON_X+"</button>";
     }
     if(h.confirmed){
       html+="<button class='iconbtn sm' title='Edytuj' data-onclick='UI.editHeat("+h.n+")'>"+ICON_EDIT+"</button>";
       html+="<button class='iconbtn sm' title='Reset biegu' data-onclick='UI.resetHeat("+h.n+")'>"+ICON_RESET+"</button>";
     }
-    else if(active)html+="<button class='btn small primary' style='margin:0' data-onclick='UI.confirmHeat("+h.n+")'>\u2714 Zatwierd\u017a</button>";
+    else if(active)html+="<button class='btn small primary' style='margin:0' data-onclick='UI.confirmHeat("+h.n+")'>✔ Zatwierdź</button>";
     else html+="<span style='color:var(--text-muted);font-size:0.8rem'>"+ICON_LOCK_SM+"Zablokowany</span>";
     html+="</div></div><div class='hrows'>";
     const rowOf=(e,r,extraCls,inner)=>"<div class='rcard "+(extraCls||"")+"' style='border-left:4px solid "+GATE_COLOR[e.gate]+"'>"+inner+"</div>";
@@ -1454,7 +1454,7 @@ function heatCardHtml(c,h,firstOpen){
         if(fin!==null&&fin!==undefined){
           pos++;
           const rr=r[fin];
-          html+=rowOf(e,0,"","<span class='name'>"+escq(c.mapping[fin]||"?")+"</span><span class='pos'>"+pos+". \u2014 "+fmtRes(rr)+"</span>");
+          html+=rowOf(e,0,"","<span class='name'>"+escq(c.mapping[fin]||"?")+"</span><span class='pos'>"+pos+". — "+fmtRes(rr)+"</span>");
         }
       });
     }else{
@@ -1476,14 +1476,14 @@ function heatCardHtml(c,h,firstOpen){
           const downDis=(pos===finsCount)?"disabled":"";
           const canReassign=(h.n>20||h.extra)&&!isSub;
           const subNote=isSub?"<small style='color:var(--text-muted)'> (za "+escq(c.mapping[h.entries[e.replOf].rider]||"?")+")</small>":"";
-          const nameAttrs=canReassign?" style='cursor:pointer;text-decoration:underline dotted' title='Zmie\u0144 zawodnika' data-onclick='UI.pickOpenRider("+h.n+","+ei+")'":"";
+          const nameAttrs=canReassign?" style='cursor:pointer;text-decoration:underline dotted' title='Zmień zawodnika' data-onclick='UI.pickOpenRider("+h.n+","+ei+")'":"";
           html+="<div class='rcard' data-heat='"+h.n+"' data-slot='"+ei+"' data-pos='"+(pos-1)+"' style='border-left:4px solid "+col+"'>"+
             ""+
             "<span class='name'"+nameAttrs+">"+escq(c.mapping[r]||"?")+subNote+"</span>"+
             "<span class='pos'>"+pos+".</span>"+
             "<div class='rcardbtns'>"+
-              "<button class='cardbtn' "+upDis+" title='Przesu\u0144 w g\u00f3r\u0119' data-onclick='UI.moveRider("+h.n+","+ei+",-1)'>"+ICON_UP+"</button>"+
-              "<button class='cardbtn' "+downDis+" title='Przesu\u0144 w d\u00f3\u0142' data-onclick='UI.moveRider("+h.n+","+ei+",1)'>"+ICON_DOWN+"</button>"+
+              "<button class='cardbtn' "+upDis+" title='Przesuń w górę' data-onclick='UI.moveRider("+h.n+","+ei+",-1)'>"+ICON_UP+"</button>"+
+              "<button class='cardbtn' "+downDis+" title='Przesuń w dół' data-onclick='UI.moveRider("+h.n+","+ei+",1)'>"+ICON_DOWN+"</button>"+
               (!isSub?"<button class='cardbtn flag' title='Wykluczenie' data-onclick='UI.markerMenu("+h.n+","+ei+")'>"+ICON_FLAG+"</button>":"")+
             "</div>"+
           "</div>";
@@ -1493,8 +1493,8 @@ function heatCardHtml(c,h,firstOpen){
     html+="</div></div>";
   return html;
 }
-/* Delegowana obs\u0142uga zdarze\u0144 \u2014 zast\u0119puje atrybuty onclick/onchange, dzi\u0119ki czemu CSP nie potrzebuje 'unsafe-inline' w script-src.
-   Bez eval: dozwolone s\u0105 wy\u0142\u0105cznie wywo\u0142ania UI.metoda(literaly) na w\u0142asnych metodach obiektu UI. */
+/* Delegowana obsługa zdarzeń — zastępuje atrybuty onclick/onchange, dzięki czemu CSP nie potrzebuje 'unsafe-inline' w script-src.
+   Bez eval: dozwolone są wyłącznie wywołania UI.metoda(literaly) na własnych metodach obiektu UI. */
 (function(){
   const CALL=/^UI\.([A-Za-z_]\w*)\((.*)\)$/;
   function arg(t,el){
@@ -1527,15 +1527,15 @@ function heatCardHtml(c,h,firstOpen){
   }));
   document.getElementById("overlay").addEventListener("click",ev=>{if(ev.target===ev.currentTarget&&!UI._modalLock)UI.closeModal();});
 })();
-/* Rejestracja Service Workera \u2014 w\u0142\u0105cza pe\u0142n\u0105 instalowalno\u015b\u0107 (PWA) i prac\u0119 offline,
+/* Rejestracja Service Workera — włącza pełną instalowalność (PWA) i pracę offline,
    ale tylko gdy plik jest hostowany przez http/https razem z sw.js. Otwarty lokalnie
-   (file://) po prostu nic nie robi \u2014 b\u0142\u0105d jest wyciszony. */
+   (file://) po prostu nic nie robi — błąd jest wyciszony. */
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("./sw.js").catch(()=>{});
   });
 }
-/* Dost\u0119pno\u015b\u0107: etykiety aria dla przycisk\u00f3w z samym title, Esc/Tab w oknach, Enter/Spacja na role="button"/"switch". */
+/* Dostępność: etykiety aria dla przycisków z samym title, Esc/Tab w oknach, Enter/Spacja na role="button"/"switch". */
 (function(){
   const label=root=>{
     if(!root||root.nodeType!==1)return;
@@ -1937,7 +1937,7 @@ function lgUsage(m){
   return us;
 }
 function lgRiderTotals(teamKey,upto){
-  /* upto â liczba biegÃ³w branych pod uwagÄ (nominacje 14/15 liczÄ punkty z bieg\u00f3w 1-13) */
+  /* upto â liczba biegÃ³w branych pod uwagÄ (nominacje 14/15 liczÄ punkty z biegów 1-13) */
   const m=lgm();if(!m)return{};
   const side=lgLineup(teamKey);
   const totals={};
@@ -1966,14 +1966,14 @@ function lgRiderTotals(teamKey,upto){
   Object.values(totals).forEach(t=>t.cells.sort((a,b)=>a.heat-b.heat));
   return totals;
 }
-/* Zast\u0119pstwa (ca\u0142y mecz, biegi 1-15): RZ \u2014 rezerwa zwyk\u0142a: za pozycje
-   seniorskie 1-5 / 9-13 mog\u0105 wjecha\u0107 rezerwowi 6-7 / 14-15 oraz 8 / 16;
-   rezerwowy 8 / 16 jako junior (J) mo\u017ce dodatkowo zast\u0105pi\u0107 pozycje juniorskie
+/* Zastępstwa (cały mecz, biegi 1-15): RZ — rezerwa zwykła: za pozycje
+   seniorskie 1-5 / 9-13 mogą wjechać rezerwowi 6-7 / 14-15 oraz 8 / 16;
+   rezerwowy 8 / 16 jako junior (J) może dodatkowo zastąpić pozycje juniorskie
    6-7 / 14-15 (w RZ i RT). Junior wystawiony na pozycji seniorskiej jest traktowany
-   jak senior (r\u00f3wnie\u017c w RT: nie ogranicza zast\u0119puj\u0105cego do junior\u00f3w).
-   RT \u2014 rezerwa taktyczna (ka\u017cdy z 1-16, tylko przy stracie 6+ pkt, raz na mecz
-   dru\u017cyny, ka\u017cdy zawodnik tylko raz jako RT). ZZ obs\u0142uguje \u201eZawodnik zast\u0119powany\u201d
-   (zob. ni\u017cej) \u2014 z menu wyklucze\u0144 opcja ZZ znikn\u0119\u0142a. */function lgIsJunior(num,teamKey){
+   jak senior (również w RT: nie ogranicza zastępującego do juniorów).
+   RT — rezerwa taktyczna (każdy z 1-16, tylko przy stracie 6+ pkt, raz na mecz
+   drużyny, każdy zawodnik tylko raz jako RT). ZZ obsługuje „Zawodnik zastępowany”
+   (zob. niżej) — z menu wykluczeń opcja ZZ zniknęła. */function lgIsJunior(num,teamKey){
   const side=lgLineup(teamKey);
   const name=side&&side.lineup[num];
   return !!(name&&S.juniors&&S.juniors.includes(name));
@@ -1989,8 +1989,8 @@ function lgEligible(teamKey,exclNum,type,heatIdx){
   const jrNum=teamKey==="home"?16:8;
   let cands=[];
   if(type==="RZ"){
-    /* RZ: rezerwowy 8/16 mo\u017ce zast\u0119powa\u0107 r\u00f3wnie\u017c pozycje seniorskie 1-5 / 9-13;
-       jako junior (J) dodatkowo zast\u0119puje junior\u00f3w 6-7 / 14-15 (RZ i RT). */
+    /* RZ: rezerwowy 8/16 może zastępować również pozycje seniorskie 1-5 / 9-13;
+       jako junior (J) dodatkowo zastępuje juniorów 6-7 / 14-15 (RZ i RT). */
     if(isMain)cands=reserves.slice();
     else if(isRes&&lgIsJunior(jrNum,teamKey))cands=[jrNum];
   }else if(type==="RT"){
@@ -2065,7 +2065,7 @@ function lgMaybePromptZZ(){
     const cands=lgZZCandidates(teamKey,hi);
     const rt=lgZZRtCandidates(teamKey,hi,slot.num);
     if(cands.length||rt.length)UI.lgPromptZZ(hi,slotIdx,teamKey,cands,rt);
-    return; /* jedno okienko naraz â kolejny slot ZZ dostanie prompt po obs\u0142u\u017ceniu tego */
+    return; /* jedno okienko naraz â kolejny slot ZZ dostanie prompt po obsłużeniu tego */
   }
 }
 /* RT za Zawodnika zastÄpowanego: tylko przy stracie 6+ pkt. Pozwala wstawiÄ takÅ¼e kogoÅ,
@@ -2116,10 +2116,10 @@ UI.lgPickZZ=function(heatIdx,slotIdx,teamKey,n,type){
   UI.closeModal();lgRender();
 };
 /* Biegi nominowane 14/15: do 14 nie moÅ¼na wybraÄ dwÃ³ch najlepszych (bonusy siÄ nie liczÄ). */
-/* Biegi nominowane 14/15: przy ustalaniu sk\u0142ad\u00f3w NIE uwzgl\u0119dniamy rezerw 6-8/14-16
-   (one mog\u0105 w nich wyst\u0105pi\u0107 wg normalnych zasad rezerw). Bieg 15: je\u017adzi najlepszy
-   zawodnik podstawowego sk\u0142adu (1-5 / 9-13) plus jeden dowolnie wybrany; pozostali
-   \u2014 w biegu 14. Zawodnik nie mo\u017ce wyst\u0105pi\u0107 w obu biegach nominowanych. */
+/* Biegi nominowane 14/15: przy ustalaniu składów NIE uwzględniamy rezerw 6-8/14-16
+   (one mogą w nich wystąpić wg normalnych zasad rezerw). Bieg 15: jeździ najlepszy
+   zawodnik podstawowego składu (1-5 / 9-13) plus jeden dowolnie wybrany; pozostali
+   — w biegu 14. Zawodnik nie może wystąpić w obu biegach nominowanych. */
 function lgNomMainNums(teamKey){
   const side=lgLineup(teamKey);
   const nums=Object.keys(side.lineup).map(Number)
@@ -2145,11 +2145,11 @@ function lgNomPlan(tk){
   return {avail,locked,tie,below,forced,free,cap:Math.max(0,tie.length-free)};
 }
 function lgEligibleNominated(teamKey,heatIdx){
-  /* Biegi nominowane 14/15: przy ustalaniu sk\u0142ad\u00f3w brani s\u0105 pod uwag\u0119 wy\u0142\u0105cznie
-     zawodnicy pozycji seniorskich 1-5 / 9-13 \u2014 junior wystawiony na pozycji seniorskiej
-     liczy si\u0119 jak senior. Rezerwi 6-8 / 14-16 nie s\u0105 brani pod uwag\u0119 przy ustalaniu
-     sk\u0142ad\u00f3w, ale mog\u0105 w nich wyst\u0105pi\u0107 jako rezerwy wg zwyk\u0142ych zasad. Bieg 15 \u2014
-     tylko czo\u0142\u00f3wka punktacyjna (lgNomTopGroup). */
+  /* Biegi nominowane 14/15: przy ustalaniu składów brani są pod uwagę wyłącznie
+     zawodnicy pozycji seniorskich 1-5 / 9-13 — junior wystawiony na pozycji seniorskiej
+     liczy się jak senior. Rezerwi 6-8 / 14-16 nie są brani pod uwagę przy ustalaniu
+     składów, ale mogą w nich wystąpić jako rezerwy wg zwykłych zasad. Bieg 15 —
+     tylko czołówka punktacyjna (lgNomTopGroup). */
   const m=lgm();if(!m)return[];
   const us=lgUsage(m);
   const h=m.heats[heatIdx];
@@ -2164,12 +2164,12 @@ function lgEligibleNominated(teamKey,heatIdx){
     return rec.starts<5+(rec.usedRT?1:0)+(rec.usedZZ?1:0);
   });
 }
-/* ===== Panel nominacji: po biegu 13 trenerzy OBU dru\u017cyn wybieraj\u0105 \u2014 od razu,
-   w jednym miejscu \u2014 sk\u0142ady na biegi 14 i 15 (najpierw 15, potem 14). Decyzje
-   zapisujemy dopiero po zako\u0144czeniu ca\u0142ego panelu. ===== */
-let lgNomAsked={}; /* klucz: id zawod\u00f3w \u2014 panel pokazujemy raz na mecz */
+/* ===== Panel nominacji: po biegu 13 trenerzy OBU drużyn wybierają — od razu,
+   w jednym miejscu — składy na biegi 14 i 15 (najpierw 15, potem 14). Decyzje
+   zapisujemy dopiero po zakończeniu całego panelu. ===== */
+let lgNomAsked={}; /* klucz: id zawodów — panel pokazujemy raz na mecz */
 let LgNom=null;
-let LgNomPre=null; /* snapshot stanu meczu sprzed panelu nominacji \u2014 rollback po âAnulujâ */
+let LgNomPre=null; /* snapshot stanu meczu sprzed panelu nominacji — rollback po âAnulujâ */
 function lgMaybeNominate(){
   const m=lgm();if(!m)return;
   const c=cur();if(!c)return;
@@ -2179,14 +2179,14 @@ function lgMaybeNominate(){
   if(m.nom)return; /* pula juÅ¼ wybrana */
   if(m.heats[hi].slots.some(s=>s.num!=null)||m.heats[hi+1].slots.some(s=>s.num!=null))return;
   lgNomAsked[c.id]=true;
-  UI.lgNominatePanel(); /* \u015bcie\u017cka automatyczna \u2014 snapshot bierze bie\u017c\u0105cy (pusty) stan */
+  UI.lgNominatePanel(); /* ścieżka automatyczna — snapshot bierze bieżący (pusty) stan */
 }
 UI.lgNominatePanel=function(preSnap){
   const m=lgm();if(!m)return;
   /* Snapshot stanu meczu sprzed panelu: przy âAnulujâ przywracamy caÅoÅÄ
-     (m.nom + obsady bieg\u00f3w 14/15). Dla ponownych nominacji (lgRenominate)
-     snapshot musi zosta\u0107 zrobiony PRZED wyczyszczeniem bieg\u00f3w \u2014 dlatego
-     przyjmujemy go jako argument; w \u015bcie\u017cce automatycznej wystarczy bie\u017c\u0105cy stan. */
+     (m.nom + obsady biegów 14/15). Dla ponownych nominacji (lgRenominate)
+     snapshot musi zostać zrobiony PRZED wyczyszczeniem biegów — dlatego
+     przyjmujemy go jako argument; w ścieżce automatycznej wystarczy bieżący stan. */
   LgNomPre=(typeof preSnap==="string")?preSnap:JSON.stringify(m);
   UI.announce("Nominacje â biegi 14 i 15",
     "Zatwierdzono biegi 1â13. Trenerzy <b>obu druÅ¼yn</b> wybiorÄ teraz zawodnikÃ³w nominowanych"+
@@ -2281,7 +2281,7 @@ UI.lgNominateNext=function(){
   LgNom.sel=[];
   LgNom.i++;
   if(LgNom.i>=LgNom.steps.length){
-    /* wszystkie cztery decyzje zapad\u0142y \u2014 zapisujemy jednym zapisem stanu */
+    /* wszystkie cztery decyzje zapadły — zapisujemy jednym zapisem stanu */
     const picks=LgNom.picks;LgNom=null;
     if(!mutate(()=>{
       m.nom={};
@@ -2292,7 +2292,7 @@ UI.lgNominateNext=function(){
   UI.lgNominateShow();
 };
 /* Anulowanie panelu nominacji: przywraca stan meczu sprzed panelu (rollback
-   m.nom i obsad bieg\u00f3w 14/15 zapisany w LgNomPre) i zamyka okno. */
+   m.nom i obsad biegów 14/15 zapisany w LgNomPre) i zamyka okno. */
 UI.lgNominateCancel=function(){
   const m=lgm();
   const pre=LgNomPre;
@@ -2323,7 +2323,7 @@ UI.lgRenominate=function(){
   if(!m.heats.slice(0,13).every(h=>h.confirmed)){UI.toast("Nominacje sÄ dostÄpne po zatwierdzeniu biegÃ³w 1â13.");return;}
   if(h14.confirmed||h15.confirmed){UI.toast("Najpierw zresetuj bieg 14 i 15 â nominacje moÅ¼na zmieniÄ tylko przed ich zatwierdzeniem.");return;}
   UI.confirm("Ponownie wybraÄ nominowanych zawodnikÃ³w do biegÃ³w 14 i 15?<br><small style='color:var(--text-muted)'>Obecne obsady tych biegÃ³w zostanÄ wyczyszczone.</small>",()=>{
-    const preMatch=JSON.stringify(m); /* stan sprzed czyszczenia \u2014 rollback dla âAnulujâ */
+    const preMatch=JSON.stringify(m); /* stan sprzed czyszczenia — rollback dla âAnulujâ */
     if(!mutate(()=>{
       delete m.nom;
       [h14,h15].forEach(h=>{
@@ -2340,8 +2340,8 @@ UI.lgRenominate=function(){
 /* ===== Interakcje meczu ===== */
 let lgExclSeq=0;
 function lgReorder(h){
-  /* Dop\u00f3ki w biegu nominowanym s\u0105 nieobsadzone pola \u2014 zachowujemy uk\u0142ad p\u00f3l startowych;
-     przestawianie (meta/wykluczenia) zaczyna dzia\u0142a\u0107 dopiero po obsadzeniu ca\u0142ego biegu. */
+  /* Dopóki w biegu nominowanym są nieobsadzone pola — zachowujemy układ pól startowych;
+     przestawianie (meta/wykluczenia) zaczyna działać dopiero po obsadzeniu całego biegu. */
   if(h.slots.some(s=>s.num==null))return;
   const fins=h.order.filter(i=>{const s=h.slots[i];return !s.excl&&s.num!=null;});
   const excluded=h.slots.map((s,i)=>i).filter(i=>h.slots[i].excl&&h.slots[i].num!=null)
@@ -2878,7 +2878,7 @@ UI.nextHeat=function(){
   if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
 };
 
-/* Aktualizacja tylko jednej karty biegu (np. po przesuni\u0119ciu zawodnika). */
+/* Aktualizacja tylko jednej karty biegu (np. po przesunięciu zawodnika). */
 function updateHeatCard(h){
   const c=cur();if(!c)return;
   const el=$("heat-"+h.n);
