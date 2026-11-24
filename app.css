@@ -488,3 +488,17 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 /* Wynik i przyciski biegu ligowego zawsze przy prawej krawędzi karty — także gdy zawijają się do drugiego wiersza. */
 .lg-headright { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .lg-headright .lg-heatscore { margin-left: 0; margin-right: 2px; }
+
+/* ===== ZAWODY PAR (prefiks pm-) ===== */
+#pairs { padding-bottom: 200px; }
+.pm-vs { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.82rem; font-weight: 800; color: var(--text-strong); text-transform: uppercase; letter-spacing: 0.3px; margin: 0 0 10px; flex-wrap: wrap; }
+.pm-vs .pm-t { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pm-vs .sep { color: var(--text-muted); }
+.pm-badge { font-family: var(--font-head); font-weight: 800; color: var(--accent-blue); width: 26px; text-align: center; flex-shrink: 0; }
+.pm-place { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; color: var(--amber); flex-shrink: 0; min-width: 28px; text-align: center; }
+.pm-tie { display: inline-flex; gap: 4px; margin-left: 6px; }
+.pm-tie .cardbtn { width: 30px; height: 30px; }
+.pm-sblabel { text-align: center; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.6px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 4px; }
+.pm-finrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; }
+.pm-finrow b { font-family: var(--font-head); color: var(--accent-blue); }
+.pm-tag { font-size: 0.68rem; font-weight: 800; color: var(--amber); letter-spacing: 0.5px; margin-left: 8px; }

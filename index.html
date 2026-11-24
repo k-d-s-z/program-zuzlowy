@@ -106,6 +106,8 @@
     <button class="btn hint" data-onclick="UI.newComp(22)"><span>Indywidualne &#8212; 22 wy&#347;cigi</span><small>np. SEC</small></button>
     <button class="btn hint" data-onclick="UI.newComp(20)"><span>Indywidualne &#8212; 20 wy&#347;cig&#243;w</span><small>np. MIMP</small></button>
     <button class="btn hint" style="margin-top:14px" data-onclick="UI.startLeague()"><span>Zawody ligowe</span><small>mecz drużynowy, 15 wyścigów</small></button>
+    <button class="btn hint" style="margin-top:14px" data-onclick="UI.startPairs(7)"><span>Pary &#8212; 7 drużyn</span><small>np. SoN</small></button>
+    <button class="btn hint" data-onclick="UI.startPairs(8)"><span>Pary &#8212; 8 drużyn</span><small>np. SoN2</small></button>
   </div>
 </section>
 
@@ -138,14 +140,15 @@
     <button class="btn" data-onclick="UI.openRoster('INNE')">INNE</button>
   </div>
   <div class="card">
-    <h3>LIGOWE</h3>
-    <button class="btn" data-onclick="UI.screen('teams')">DRUŻYNY</button>
+    <h3>DRUŻYNY</h3>
+    <button class="btn" data-onclick="UI.openTeams('league')">DRUŻYNY LIGOWE</button>
+    <button class="btn" data-onclick="UI.openTeams('national')">DRUŻYNY NARODOWE</button>
   </div>
 </section>
 
 <!-- DRUŻYNY — menedżer -->
 <section id="teams" class="screen">
-  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.screen('people')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2>DRUŻYNY</h2></div>
+  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.screen('people')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 id="teamsTitle">DRUŻYNY</h2></div>
   <div class="card">
     <button class="btn primary" data-onclick="UI.addTeam()">+ DODAJ DRUŻYNĘ</button>
     <div id="teamList"></div>
@@ -185,6 +188,27 @@
   <div id="lgTeamsWrap"></div>
   <div id="lgHeatsWrap"></div>
   <div class="lg-scorebar" id="lgScorebar"></div>
+</section>
+
+<!-- ZAWODY PAR — konfiguracja i kolejność losowania -->
+<section id="pmSetup" class="screen">
+  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.cancelPairs()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="pmSetupTitle">PARY</h2></div>
+  <div class="card" style="padding:8px"><div id="pmSetupBody"></div></div>
+  <button class="btn primary" data-onclick="UI.pmSetupNext()">DALEJ</button>
+</section>
+
+<!-- ZAWODY PAR — składy drużyn (3 zawodników) -->
+<section id="pmLineup" class="screen">
+  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.pmLineupBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="pmLineupTitle">SKŁAD</h2></div>
+  <div class="card" style="padding:8px"><div id="pmLineupBody"></div></div>
+  <button class="btn primary" id="pmLineupNext" data-onclick="UI.pmLineupNext()">DALEJ</button>
+</section>
+
+<!-- ZAWODY PAR — jeden ekran: składy (z wynikami drużyn) / wyścigi -->
+<section id="pairs" class="screen">
+  <div id="pmTeamsWrap"></div>
+  <div id="pmHeatsWrap"></div>
+  <div class="lg-scorebar" id="pmScorebar"></div>
 </section>
 
 <!-- ============ OKNO PUNKTACJA ============ -->
