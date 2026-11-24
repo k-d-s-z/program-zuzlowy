@@ -497,8 +497,40 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .pm-badge { font-family: var(--font-head); font-weight: 800; color: var(--accent-blue); width: 26px; text-align: center; flex-shrink: 0; }
 .pm-place { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; color: var(--amber); flex-shrink: 0; min-width: 28px; text-align: center; }
 .pm-tie { display: inline-flex; gap: 4px; margin-left: 6px; }
-.pm-tie .cardbtn { width: 30px; height: 30px; }
+.pm-tie .cardbtn { width: 34px; height: 34px; }
 .pm-sblabel { text-align: center; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.6px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 4px; }
 .pm-finrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 700; }
 .pm-finrow b { font-family: var(--font-head); color: var(--accent-blue); }
 .pm-tag { font-size: 0.68rem; font-weight: 800; color: var(--amber); letter-spacing: 0.5px; margin-left: 8px; }
+
+/* ===== Szachownica na ekranie głównym ===== */
+.chk-strip {
+  height: 14px; margin: 10px 4px; border-radius: 3px; opacity: 0.55;
+  background: repeating-conic-gradient(#f9fafb 0 25%, #0b0f19 0 50%) 0 0 / 14px 14px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+}
+
+/* ===== Szkło (glassmorphism) ===== */
+body {
+  background:
+    radial-gradient(520px 420px at 8% 4%, rgba(239,68,68,0.20), transparent 70%),
+    radial-gradient(560px 460px at 96% 22%, rgba(59,130,246,0.22), transparent 70%),
+    radial-gradient(520px 460px at 30% 98%, rgba(234,179,8,0.14), transparent 70%),
+    var(--bg-main);
+  background-attachment: fixed;
+}
+.card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.lg-teamcard, .heat {
+  background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+  border-color: rgba(255,255,255,0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); }

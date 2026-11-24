@@ -1,9 +1,9 @@
 /* Service Worker: cache-first, wyłącznie pliki z własnego hosta.
    Po zmianie index.html / app.js / app.css podbij numer wersji w CACHE. */
 const PREFIX="zuzel-";
-const CACHE=PREFIX+"v34";
+const CACHE=PREFIX+"v39";
 const CORE=["./","./index.html","./app.js","./app.css","./manifest.json"];
-const OPT=["./icon.svg","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png"];
+const OPT=["./icon.svg","./icon-192.png","./home-rider.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png"];
 self.addEventListener("install",e=>{
   /* cache:"reload" — omija pamięć HTTP przeglądarki, żeby nowa wersja nie pobrała starych plików. */
   /* Ikony są opcjonalne — jej brak nie może zablokować instalacji całej aplikacji. */
