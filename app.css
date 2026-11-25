@@ -7,12 +7,10 @@
   --accent-blue: #38bdf8;
   --text-main: #f9fafb;
   --text-muted: #9ca3af;
-  --danger: #ef4444;
-  --danger-bg: #450a0a;
   color-scheme: dark;
   --text-strong: #fff; --danger-fg: #fca5a5; --danger-btn-bg: #311213; --danger-btn-bd: #7f1d1d; --sticky-bg: #182232;
   --warn: #fb923c; --amber: #fbbf24; --bar-bg: rgba(11,15,25,0.82);
-  --tint-danger: rgba(69,10,10,0.4); --tint-red-a: rgba(127,29,29,0.5); --tint-red-b: rgba(127,29,29,0.25); --tint-org-a: rgba(124,45,18,0.5); --tint-org-b: rgba(124,45,18,0.3);
+  --tint-danger: rgba(69,10,10,0.4); --tint-red-a: rgba(127,29,29,0.5); --tint-red-b: rgba(127,29,29,0.25);
   --ov-03: rgba(255,255,255,0.03);
   --ov-04: rgba(255,255,255,0.04);
   --ov-05: rgba(255,255,255,0.05);
@@ -160,16 +158,6 @@ select {
   padding-right: 34px;
 }
 select option { background: var(--bg-card); color: var(--text-main); }
-
-/* Przyklejone menu g&#243;rne */
-.sticky-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: var(--bg-main);
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-color);
-}
 
 .topbar { display: flex; align-items: center; gap: 6px; }
 .topbar .grow { flex: 1; }
@@ -345,7 +333,6 @@ button:focus-visible, [role="button"]:focus-visible, [role="switch"]:focus-visib
 }
 .modal:focus { outline: none; }
 .heat { scroll-margin-top: 76px; }
-.ptssub { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.4px; margin-top: 2px; }
 table.pts td.plc.tie { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 table.pts td.plc:not(.tie) { cursor: default; }
 
@@ -405,7 +392,6 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 
 .lg-heatscore { font-weight: 800; font-size: 1.7rem; font-family: var(--font-head); color: var(--accent-blue); min-width: 64px; text-align: center; flex-shrink: 0; }
 .lg-heatscore.empty { color: var(--text-muted); font-size: 1.2rem; }
-.lg-tag { font-size: 0.65rem; font-weight: 800; color: var(--warn); margin-left: 4px; }
 .cardbtn.flag.on { background: rgba(127,29,29,0.55); border-color: #ef4444; }
 .lg-heatscore { margin-left: auto; margin-right: 10px; }
 
@@ -423,15 +409,12 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .lg-scorebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); }
 .lg-scorebar-inner { max-width: 900px; margin: 0 auto; }
 .lg-sbrow { display: flex; gap: 5px; margin-bottom: 5px; }
-.lg-skladybtn { flex: 1; background: var(--ov-06); border: 1px solid var(--ov-15); border-radius: 10px; color: var(--text-strong); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; text-transform: uppercase; padding: 7px; min-height: 34px; }
 .lg-scorerow { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: var(--ov-06); border: 1px solid var(--ov-12); }
 .lg-scorerow .snm { flex: 1; font-size: 1.15rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; line-height: 1.15; color: var(--text-strong); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .lg-scorerow .snm .wrap2 { display: flex; flex-direction: column; overflow: visible; }
 .lg-scorerow .snm .wrap2 span { display: block; overflow-wrap: break-word; }
 .lg-scorerow .snm.away { text-align: right; align-items: flex-end; }
 .lg-scorerow .ssc { font-size: 1.9rem; font-weight: 800; font-family: var(--font-head); color: var(--accent-blue); flex-shrink: 0; letter-spacing: 1px; }
-.lg-sbicon { flex: 0 0 44px; background: var(--ov-06); border: 1px solid var(--ov-15); border-radius: 10px; color: var(--text-strong); min-height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; }
-.lg-sbicon svg { width: 18px; height: 18px; fill: currentColor; }
 /* Pływające menu (dół ekranu): jednakowe przyciski w zawodach indywidualnych i ligowych */
 .fbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
 .fbtn { flex: 0 0 clamp(40px, 11.5vw, 52px); height: 46px; padding: 0; border-radius: 12px; background: var(--ov-06); border: 1px solid var(--ov-15); color: var(--text-strong); display: flex; align-items: center; justify-content: center; }
@@ -449,7 +432,6 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 #points { min-height: 0; padding-bottom: 0; }
 #points > .card { margin-bottom: 0; }
 #points .tblwrap { max-height: calc(100vh - 34px); max-height: calc(100dvh - 34px); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
-.lg-sbicon.active { background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 100%); color: #0b0f19; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
 /* Ekran składów drużyny (lineup meczu ligowego) */
 .lg-lineuprow { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
@@ -551,5 +533,4 @@ body {
 .qd-sbc { flex: 1; min-width: 0; border: 2px solid; border-radius: 10px; padding: 4px 6px; text-align: center; background: rgba(255,255,255,0.05); }
 .qd-sbc .n { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qd-sbc b { font-size: 1.2rem; font-weight: 900; }
-.qd-gate { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-right: 8px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); font-size: 0.72rem; font-weight: 800; color: var(--text-muted); flex-shrink: 0; }
 #quad { padding-bottom: 200px; }
