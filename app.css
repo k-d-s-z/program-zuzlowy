@@ -542,3 +542,14 @@ body {
 .upd-banner span { flex: 1; }
 .upd-banner .upd-go { background: #38bdf8; color: #04060d; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px; }
 .upd-banner .upd-x { background: transparent; border: 0; color: var(--text-muted); font-size: 1.3rem; line-height: 1; padding: 4px 8px; }
+
+/* Czwórmecz */
+.qd-dot { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); flex-shrink: 0; margin-right: 8px; }
+.qd-places { padding: 4px 12px 10px; font-size: 0.76rem; color: var(--text-muted); }
+.qd-places b { color: var(--text-main); }
+.qd-sb { display: flex; gap: 6px; padding: 4px 8px 8px; }
+.qd-sbc { flex: 1; min-width: 0; border: 2px solid; border-radius: 10px; padding: 4px 6px; text-align: center; background: rgba(255,255,255,0.05); }
+.qd-sbc .n { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qd-sbc b { font-size: 1.2rem; font-weight: 900; }
+.qd-gate { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-right: 8px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); font-size: 0.72rem; font-weight: 800; color: var(--text-muted); flex-shrink: 0; }
+#quad { padding-bottom: 200px; }

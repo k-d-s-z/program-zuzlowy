@@ -87,6 +87,7 @@
     <button class="btn hint" style="margin-top:14px" data-onclick="UI.startLeague()"><span>Zawody ligowe</span><small>mecz drużynowy, 15 wyścigów</small></button>
     <button class="btn hint" style="margin-top:14px" data-onclick="UI.startPairs(7)"><span>Pary &#8212; 7 drużyn</span><small>np. SoN</small></button>
     <button class="btn hint" data-onclick="UI.startPairs(8)"><span>Pary &#8212; 8 drużyn</span><small>np. SoN2</small></button>
+    <button class="btn hint" style="margin-top:14px" data-onclick="UI.startQuad()"><span>Czwórmecz</span><small>np. SWC</small></button>
   </div>
 </section>
 
@@ -188,6 +189,27 @@
   <div id="pmTeamsWrap"></div>
   <div id="pmHeatsWrap"></div>
   <div class="lg-scorebar" id="pmScorebar"></div>
+</section>
+
+<!-- CZWÓRMECZ — wybór drużyn i kolorów -->
+<section id="qdSetup" class="screen">
+  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.cancelQuad()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="qdSetupTitle">CZWÓRMECZ</h2></div>
+  <div class="card" style="padding:8px"><div id="qdSetupBody"></div></div>
+  <button class="btn primary" data-onclick="UI.qdSetupNext()">DALEJ</button>
+</section>
+
+<!-- CZWÓRMECZ — składy drużyn (4 + rezerwa) -->
+<section id="qdLineup" class="screen">
+  <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.qdLineupBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="qdLineupTitle">SKŁAD</h2></div>
+  <div class="card" style="padding:8px"><div id="qdLineupBody"></div></div>
+  <button class="btn primary" id="qdLineupNext" data-onclick="UI.qdLineupNext()">DALEJ</button>
+</section>
+
+<!-- CZWÓRMECZ — składy (z wynikami drużyn) / wyścigi -->
+<section id="quad" class="screen">
+  <div id="qdTeamsWrap"></div>
+  <div id="qdHeatsWrap"></div>
+  <div class="lg-scorebar" id="qdScorebar"></div>
 </section>
 
 <!-- ============ OKNO PUNKTACJA ============ -->

@@ -394,7 +394,7 @@ const UI={
     if(id==="teams")renderTeams();if(id==="teamDetail")renderTeamDetail();
     if(id==="lgTeam")renderLgTeamPick();if(id==="lgLineup")renderLgLineup();
     if(id==="match")lgRender();
-    if(id==="pairs")pmRender();if(id==="pmSetup")renderPmSetup();if(id==="pmLineup")renderPmLineup();
+    if(id==="pairs")pmRender();if(id==="pmSetup")renderPmSetup();if(id==="pmLineup")renderPmLineup();if(id==="quad")qdRender();if(id==="qdSetup")renderQdSetup();if(id==="qdLineup")renderQdLineup();
     UI.syncNavIcons();
     if(id==="races")requestAnimationFrame(scrollToCurrentHeat);
   },
@@ -487,6 +487,7 @@ const UI={
           [c.home,c.away].forEach(side=>{Object.keys(side.lineup).forEach(k=>{if(side.lineup[k]===old)side.lineup[k]=v;});});
         }
         if(c.pairs&&c.pm)c.pm.teams.forEach(t=>{t.riders=t.riders.map(n=>n===old?v:n);});
+        if(c.quad&&c.qd)c.qd.teams.forEach(t=>{t.riders=t.riders.map(n=>n===old?v:n);});
       });
       if(!persistAll()){try{S=JSON.parse(snap);}catch(e){}return;}
       refreshRiderViews();UI.closeModal();
@@ -599,6 +600,7 @@ const UI={
         if(!hasComps)d.comps={};
         Object.values(d.comps).forEach(c=>{["home","away"].forEach(k=>{if(c&&c[k]&&typeof c[k].name==="string")c[k].name=cleanText(c[k].name,100);});});
         Object.values(d.comps).forEach(c=>{if(c&&c.pairs&&c.pm)c.pm.teams.forEach(t=>{t.name=cleanText(t.name,100)||"Drużyna";t.riders=t.riders.map(r=>r==null?null:cleanText(r,100));});});
+        Object.values(d.comps).forEach(c=>{if(c&&c.quad&&c.qd&&Array.isArray(c.qd.teams))c.qd.teams.forEach(t=>{if(t&&typeof t==="object"){t.name=cleanText(t.name,100)||"Drużyna";if(Array.isArray(t.riders))t.riders=t.riders.map(r=>r==null?null:cleanText(r,100));}});});
         Object.values(d.comps).forEach(c=>{
           if(c.name)c.name=cleanText(c.name,80);
           if(!c.overrides)c.overrides={};
@@ -1091,8 +1093,8 @@ function renderSaved(){
   const el=$("savedList");const ids=Object.keys(S.comps||{});
   if(!ids.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zapisanych zawodów.</p>";return;}  el.innerHTML=ids.map(id=>{
     const c=S.comps[id];
-    const title=c.league?((c.home&&c.home.name)+" – "+(c.away&&c.away.name)):(c.name||(c.pairs?"Zawody par":("Zawody "+c.format+"-biegowe")));
-    const meta=c.league?"Mecz ligowy · 15 wyścigów":(c.pairs?("Pary · "+(c.format==="pary7"?7:8)+" drużyn"):(c.format+"-biegowe"));
+    const title=c.league?((c.home&&c.home.name)+" – "+(c.away&&c.away.name)):(c.name||(c.quad?"Czwórmecz":(c.pairs?"Zawody par":("Zawody "+c.format+"-biegowe"))));
+    const meta=c.league?"Mecz ligowy · 15 wyścigów":(c.quad?"Czwórmecz · 20 wyścigów":c.pairs?("Pary · "+(c.format==="pary7"?7:8)+" drużyn"):(c.format+"-biegowe"));
     return "<div class='saved-item'>"+
       "<div class='saved-info'>"+
         "<span class='saved-title'>"+escq(title)+"</span>"+
@@ -1124,7 +1126,7 @@ UI.restorePrestart=function(id){
 };
 UI.openComp=function(id){S.current=id;S.settings.lastComp=id;persist();
   const c=S.comps[id];
-  UI.screen(c.league?"match":(c.pairs?"pairs":(c.launched?"points":"lineup")));};
+  UI.screen(c.league?"match":(c.quad?"quad":(c.pairs?"pairs":(c.launched?"points":"lineup"))));};
 UI.delComp=function(id){
   const c=S.comps[id];const nm=c?escq(c.name||("Zawody "+c.format+"-biegowe")):"";
   UI.confirm("Usunąć zawody <b>"+nm+"</b>?<br><small style='color:var(--text-muted)'>Tej operacji nie można cofnąć.</small>",()=>{
@@ -1148,6 +1150,11 @@ function renderHome(){
     title=(c.home&&c.home.name)+" – "+(c.away&&c.away.name);
     const last=heats.filter(h=>h.confirmed).reduce((m,h)=>Math.max(m,h.n),0);
     prog=last>0?("po wyścigu "+last+"/15"):"przed startem";
+  }else if(c.quad){
+    heats=c.qd.heats.filter(h=>!h.extra);
+    title=c.name||"Czwórmecz";
+    const last=heats.filter(h=>h.confirmed).reduce((m,h)=>Math.max(m,h.n),0);
+    prog=last>0?("po wyścigu "+last+"/"+heats.length):"przed startem";
   }else if(c.pairs){
     heats=c.pm.heats.filter(h=>!h.extra);
     title=c.name||"Zawody par";
@@ -1372,9 +1379,40 @@ function validateData(d){
     const c=d.comps[id];
     if(!isObj(c))return "zawody "+id+": nie są obiektem";
     if(typeof c.id!=="string"||c.id!==id)return "zawody "+id+": niezgodne id";
-    if(c.league!==true&&c.pairs!==true&&!Array.isArray(c.heats))return "zawody "+id+": brak listy biegów";
-    if(c.league!==true&&c.pairs!==true&&c.heats.length>IMPORT_LIMITS.heats)return "zawody "+id+": zbyt wiele biegów";
-    if(c.format!==20&&c.format!==22&&c.format!==23&&c.format!=="liga"&&c.format!=="pary7"&&c.format!=="pary8")return "zawody "+id+": nieznany format";
+    if(c.league!==true&&c.pairs!==true&&c.quad!==true&&!Array.isArray(c.heats))return "zawody "+id+": brak listy biegów";
+    if(c.league!==true&&c.pairs!==true&&c.quad!==true&&c.heats.length>IMPORT_LIMITS.heats)return "zawody "+id+": zbyt wiele biegów";
+    if(c.format!==20&&c.format!==22&&c.format!==23&&c.format!=="liga"&&c.format!=="pary7"&&c.format!=="pary8"&&c.format!=="quad")return "zawody "+id+": nieznany format";
+    if(c.quad===true){
+      /* Czwórmecz (SWC) — własny schemat. */
+      if(c.format!=="quad"||c.league===true||c.pairs===true)return "zawody "+id+": błędny format czwórmeczu";
+      if(typeof c.name!=="string"||c.name.length>200)return "zawody "+id+": błędna nazwa";
+      if(!isObj(c.mapping))return "zawody "+id+": brak mapowania";
+      if(!isObj(c.qd)||!Array.isArray(c.qd.teams)||c.qd.teams.length!==4||!Array.isArray(c.qd.heats))return "zawody "+id+": brak danych czwórmeczu";
+      const cols=new Set();
+      for(const t of c.qd.teams){
+        if(!isObj(t)||typeof t.name!=="string"||t.name.length>100)return "zawody "+id+": błędna drużyna czwórmeczu";
+        if(!isInt(t.color)||t.color<0||t.color>3||cols.has(t.color))return "zawody "+id+": błędny kolor drużyny";
+        cols.add(t.color);
+        if(!Array.isArray(t.riders)||t.riders.length!==5||!t.riders.every(r=>r===null||(typeof r==="string"&&r.length<=100)))return "zawody "+id+": błędni zawodnicy drużyny czwórmeczu";
+      }
+      if(c.qd.manual!==undefined&&(!Array.isArray(c.qd.manual)||c.qd.manual.length>4||c.qd.manual.some(x=>!isInt(x)||x<0||x>3)))return "zawody "+id+": błędna kolejność remisów";
+      if(c.qd.heats.length>60)return "zawody "+id+": zbyt wiele biegów czwórmeczu";
+      for(const h of c.qd.heats){
+        if(!isObj(h)||!isInt(h.n)||h.n<1||h.n>160||(h.n>20&&h.n<101))return "zawody "+id+": błędny bieg czwórmeczu";
+        if(typeof h.confirmed!=="boolean"||typeof h.extra!=="boolean")return "zawody "+id+": bieg "+h.n+": błędne flagi";
+        if(!Array.isArray(h.slots)||h.slots.length!==4)return "zawody "+id+": bieg "+h.n+": błędne pola";
+        for(const s of h.slots){
+          if(!isObj(s)||!isInt(s.t)||s.t<0||s.t>3||(s.ri!==null&&(!isInt(s.ri)||s.ri<0||s.ri>4))||(s.orig!==null&&s.orig!==undefined&&(!isInt(s.orig)||s.orig<0||s.orig>4)))return "zawody "+id+": bieg "+h.n+": błędny zawodnik";
+          if(!isInt(s.gate)||s.gate<1||s.gate>4)return "zawody "+id+": bieg "+h.n+": błędna bramka";
+          if(s.subType!==null&&s.subType!==undefined&&s.subType!=="RZ"&&s.subType!=="RT")return "zawody "+id+": bieg "+h.n+": błędny typ zmiany";
+          if(s.excl!==null&&s.excl!==undefined&&(typeof s.excl!=="string"||s.excl.length>8))return "zawody "+id+": bieg "+h.n+": błędne oznaczenie";
+        }
+        if(!Array.isArray(h.order)||h.order.length!==4||new Set(h.order).size!==4||h.order.some(i=>!isInt(i)||i<0||i>3))return "zawody "+id+": bieg "+h.n+": błędna kolejność";
+        if(h.score!==null&&h.score!==undefined&&(!isObj(h.score)||!Array.isArray(h.score.pts)||h.score.pts.length!==4||h.score.pts.some(x=>!isInt(x)||x<0||x>3)))return "zawody "+id+": bieg "+h.n+": błędny wynik";
+        if(h.time!==undefined&&h.time!==null&&(typeof h.time!=="string"||h.time.length>12))return "zawody "+id+": bieg "+h.n+": błędny czas";
+      }
+      continue;
+    }
     if(c.pairs===true){
       /* Zawody par (SoN / SoN2) — własny schemat. */
       if(c.format!=="pary7"&&c.format!=="pary8")return "zawody "+id+": błędny format par";
@@ -3640,6 +3678,474 @@ function pmScorebarHtml(c){
     "<div class='lg-scorerow'><div class='snm'><span class='wrap2'>"+wrapName(h.a)+"</span></div>"+
     "<div class='ssc'>"+sc+"</div>"+
     "<div class='snm away'><span class='wrap2'>"+wrapName(h.b)+"</span></div></div></div>";
+}
+
+/* ===================== CZWÓRMECZ (SWC) =====================
+   Cztery drużyny, każda w stałym kolorze kasku (czerwony, niebieski, biały, żółty). W każdym z 20 biegów
+   jedzie po jednym zawodniku z każdej drużyny. Drużyna: numery 1–4 oraz rezerwa nr 5. Punktacja 3-2-1-0
+   (zawodnik wykluczony = 0). Biegi 1–16 są ustalone z góry (numer zawodnika i bramka zależą od koloru
+   drużyny), biegi 17–20 obsadzają trenerzy. Remisy drużyn: liczba 1., 2., 3. miejsc, potem strzałki. */
+const QD_COLORS=[{n:"Czerwony",c:"#ef4444"},{n:"Niebieski",c:"#3b82f6"},{n:"Biały",c:"#f8fafc"},{n:"Żółty",c:"#eab308"}];
+/* Tabela biegów: dla każdego biegu kolejno czerwony, niebieski, biały, żółty — „numer zawodnika/bramka”. */
+const QD_TAB=("4/3 1/2 4/1 2/4|3/2 2/1 3/4 1/3|2/1 4/3 1/2 3/4|1/2 3/1 2/4 4/3|4/4 2/3 1/1 4/2|3/1 1/4 2/2 3/3|2/4 3/3 4/2 1/1|1/3 4/4 3/1 2/2|"+
+  "4/2 4/1 2/3 1/4|3/4 3/2 1/3 2/1|2/3 1/1 3/2 4/4|1/4 2/2 4/3 3/1|3/3 4/2 4/4 4/1|4/1 3/4 3/3 3/2|2/2 2/4 2/1 2/3|1/1 1/3 1/4 1/2|"+
+  "-/3 -/4 -/2 -/1|-/4 -/1 -/3 -/2|-/1 -/2 -/4 -/3|-/2 -/3 -/1 -/4").split("|").map(r=>r.split(" ").map(x=>{const p=x.split("/");return {nr:p[0]==="-"?null:+p[0],gate:+p[1]};}));
+const QD_PTS=[3,2,1,0];
+let QdW=null,QdView=null,QdViewFor=null,QdSort=false;
+
+function qdc(){const c=cur();return (c&&c.quad&&c.qd)?c:null;}
+function qdReal(t){return ((t&&t.riders)||[]).filter(n=>n!==LG_ZZ_NAME);}
+function qdName(c,t,ri){const tm=t==null?null:c.qd.teams[t];return (tm&&ri!=null&&tm.riders[ri])||"—";}
+function qdNewHeat(teams,n){
+  const slots=teams.map((tm,t)=>{
+    const x=QD_TAB[n-1][tm.color];
+    return {t,ri:x.nr==null?null:x.nr-1,orig:x.nr==null?null:x.nr-1,gate:x.gate,excl:null,subType:null};
+  });
+  return {n,extra:false,slots,order:[0,1,2,3],confirmed:false,score:null,menuOpen:null,time:null};
+}
+function qdBuildHeats(teams){const hs=[];for(let n=1;n<=20;n++)hs.push(qdNewHeat(teams,n));return hs;}
+function qdNewComp(w,name){
+  const teams=w.slots.map((ti,i)=>({name:S.teams[ti].name,color:w.cols[i],riders:w.rost[i].r.slice()}));
+  return {id:(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():("c"+Date.now()),
+    date:new Date().toLocaleDateString("pl-PL"),format:"quad",quad:true,launched:true,name,
+    cfg:{},qd:{teams,heats:qdBuildHeats(teams),manual:teams.map((_,i)=>i)},mapping:{},overrides:{}};
+}
+function qdFirstOpen(c){const hs=c.qd.heats;for(let i=0;i<hs.length;i++)if(!hs[i].confirmed)return i;return -1;}
+function qdReady(h){return h.slots.every(s=>s.ri!=null);}
+function qdEditable(c,hi){const h=c.qd.heats[hi];return !!h&&qdReady(h)&&hi===qdFirstOpen(c);}
+function qdLabel(h){return h.extra?("D"+(h.n-100)):String(h.n);}
+function qdAllDone(c){return c.qd.heats.filter(h=>!h.extra).every(h=>h.confirmed);}
+
+/* ---- Punktacja biegu ---- */
+function qdFinishers(h){return h.order.filter(i=>{const s=h.slots[i];return !s.excl&&s.ri!=null;});}
+function qdCompute(h){
+  const pts=[0,0,0,0];
+  qdFinishers(h).forEach((si,r)=>{pts[si]+=QD_PTS[Math.min(r,3)];});
+  return {pts};
+}
+function qdReorder(h){
+  const fins=qdFinishers(h);
+  const excluded=h.slots.map((s,i)=>i).filter(i=>h.slots[i].excl).sort((x,y)=>(h.slots[y].exclSeq||0)-(h.slots[x].exclSeq||0));
+  const rest=h.slots.map((s,i)=>i).filter(i=>!fins.includes(i)&&!excluded.includes(i));
+  h.order=[...fins,...excluded,...rest];
+}
+
+/* ---- Tabela drużyn: punkty → liczba 1. miejsc → 2. → 3. → ręcznie (strzałki). ---- */
+function qdEq(u,v){return !!u&&!!v&&u.pts===v.pts&&u.n[0]===v.n[0]&&u.n[1]===v.n[1]&&u.n[2]===v.n[2];}
+function qdTable(c){
+  const st=[0,1,2,3].map(t=>({t,pts:0,n:[0,0,0,0],tie:false}));
+  c.qd.heats.forEach(h=>{
+    if(!h.confirmed||h.extra||!h.score)return;
+    h.score.pts.forEach((p,t)=>{st[t].pts+=p;});
+    h.order.forEach((si,pos)=>{st[si].n[Math.min(pos,3)]++;});
+  });
+  const man=c.qd.manual||[];
+  const mi=t=>{const i=man.indexOf(t);return i<0?t:i;};
+  st.sort((x,y)=>y.pts-x.pts||y.n[0]-x.n[0]||y.n[1]-x.n[1]||y.n[2]-x.n[2]||mi(x.t)-mi(y.t));
+  st.forEach((s,i)=>{s.tie=qdEq(s,st[i+1])||qdEq(s,st[i-1]);});
+  return st;
+}
+/* Punkty zawodników drużyny (kolejne przejazdy w komórkach). */
+function qdTotals(c,t){
+  const tot=[0,1,2,3,4].map(()=>({pts:0,cells:[]}));
+  c.qd.heats.forEach(h=>{
+    if(!h.confirmed||h.extra||!h.score)return;
+    const s=h.slots[t];if(s.ri==null)return;
+    if(s.excl){tot[s.ri].cells.push({heat:h.n,excl:s.excl});return;}
+    const p=h.score.pts[t];
+    tot[s.ri].pts+=p;tot[s.ri].cells.push({heat:h.n,pts:p,sub:s.subType});
+  });
+  return tot;
+}
+
+/* ===== Kreator ===== */
+UI.startQuad=function(){
+  QdW={kind:"national",slots:[null,null,null,null],cols:[0,1,2,3],rost:{},step:0};
+  UI.screen("qdSetup");
+};
+UI.cancelQuad=function(){UI.confirm("Porzucić tworzenie zawodów?",()=>{QdW=null;UI.screen("home");});};
+UI.qdSetKind=function(v){
+  if(!QdW||(v!=="national"&&v!=="league")||QdW.kind===v)return;
+  QdW.kind=v;QdW.slots=[null,null,null,null];QdW.rost={};renderQdSetup();
+};
+function renderQdSetup(){
+  if(!QdW){UI.screen("home");return;}
+  const w=QdW;
+  $("qdSetupTitle").textContent="CZWÓRMECZ";
+  const opt=(on,txt,act)=>"<button class='btn small "+(on?"primary":"secondary")+"' data-onclick='"+act+"'>"+txt+"</button>";
+  const nat=w.kind!=="league",inKind=t=>teamIsNat(t)===nat;
+  let html="<div class='lg-setbar'><span>DRUŻYNY</span>"+
+    opt(nat,"NARODOWE","UI.qdSetKind(\"national\")")+opt(!nat,"LIGOWE","UI.qdSetKind(\"league\")")+"</div>"+
+    "<div class='lg-hints' style='margin:0 4px 12px'><div>Cztery drużyny, każda w stałym kolorze kasku. Kolor określa numer zawodnika i bramkę w biegach 1–16. Zawody mają 20 biegów; biegi 17–20 obsadzają trenerzy.</div></div>";
+  if(!S.teams.some(inKind)){
+    html+="<p style='color:var(--text-muted);text-align:center;'>Brak utworzonych drużyn "+(nat?"narodowych":"ligowych")+". Zanim rozpoczniesz zawody, utwórz drużyny wraz z zawodnikami w sekcji</p><button class='btn secondary' data-onclick='UI.goPeople()'>Zawodnicy i drużyny</button>";
+    $("qdSetupBody").innerHTML=html;return;
+  }
+  const taken=new Set(w.slots.filter(x=>x!==null));
+  for(let i=0;i<4;i++){
+    const cu=w.slots[i];
+    const pool=S.teams.map((t,ti)=>({t,ti})).filter(o=>inKind(o.t)&&(o.ti===cu||!taken.has(o.ti)));
+    html+="<div class='lg-lineuprow'><span class='qd-dot' style='background:"+QD_COLORS[w.cols[i]].c+"'></span>"+
+      "<select style='width:38%' title='Kolor kasku' data-onchange='UI.qdSetCol("+i+",this.value)'>"+
+      QD_COLORS.map((k,ci)=>"<option value='"+ci+"'"+(w.cols[i]===ci?" selected":"")+">"+k.n+"</option>").join("")+"</select>"+
+      "<select style='flex:1' "+(cu!==null?"disabled":"")+" data-onchange='UI.qdSetTeam("+i+",this.value)'>"+
+      "<option value='-1'>Wybierz drużynę</option>"+
+      pool.map(o=>"<option value='"+o.ti+"'"+(cu===o.ti?" selected":"")+">"+escq(o.t.name)+"</option>").join("")+"</select>"+
+      (cu!==null?"<button class='btn small danger' title='Zdejmij drużynę' data-onclick='UI.qdClearTeam("+i+")'>X</button>":"")+"</div>";
+  }
+  $("qdSetupBody").innerHTML=html;
+}
+UI.qdSetCol=function(i,val){
+  const w=QdW;if(!w)return;
+  const v=+val;if(!(v>=0&&v<4))return;
+  const j=w.cols.indexOf(v);
+  if(j>=0&&j!==i)w.cols[j]=w.cols[i];
+  w.cols[i]=v;renderQdSetup();
+};
+UI.qdSetTeam=function(i,val){
+  if(!QdW)return;
+  if(val==="-1"){QdW.slots[i]=null;renderQdSetup();return;}
+  const idx=+val;
+  if(QdW.slots.includes(idx)){UI.toast("❌ Ta drużyna jest już wybrana.");renderQdSetup();return;}
+  QdW.slots[i]=idx;renderQdSetup();
+};
+UI.qdClearTeam=function(i){if(!QdW)return;QdW.slots[i]=null;renderQdSetup();};
+UI.qdSetupNext=function(){
+  const w=QdW;if(!w)return;
+  if(w.slots.some(x=>x===null)){UI.toast("Wybierz wszystkie cztery drużyny.");return;}
+  const bad=w.slots.map(i=>S.teams[i]).find(t=>!t||qdReal(t).length<4);
+  if(bad){UI.toast("❌ Drużyna "+(bad.name||"")+" ma mniej niż 4 zawodników.");return;}
+  w.slots.forEach((ti,i)=>{
+    if(!w.rost[i]||w.rost[i].team!==ti){
+      const rs=qdReal(S.teams[ti]);
+      const pre=rs.length<=5?rs:[];
+      w.rost[i]={team:ti,r:[0,1,2,3,4].map(k=>pre[k]||null)};
+    }
+  });
+  w.step=0;UI.screen("qdLineup");
+};
+function renderQdLineup(){
+  const w=QdW;
+  if(!w||w.slots.some(x=>x===null)||!w.rost[w.step]){UI.screen("home");return;}
+  const i=w.step,team=S.teams[w.slots[i]];
+  if(!team){UI.screen("qdSetup");return;}
+  const ro=w.rost[i].r;
+  $("qdLineupTitle").textContent=QD_COLORS[w.cols[i]].n.toUpperCase()+": "+team.name.toUpperCase();
+  $("qdLineupNext").textContent=(i===3)?"URUCHOM ZAWODY":"DALEJ";
+  let html="";
+  ["1","2","3","4","R"].forEach((lbl,k)=>{
+    const cu=ro[k];
+    const pool=team.riders.filter(n=>n!==LG_ZZ_NAME&&(n===cu||!ro.includes(n)));
+    html+="<div class='lg-lineuprow'><span class='no'>"+lbl+"</span>"+
+      "<select style='flex:1' "+(cu?"disabled":"")+" data-onchange='UI.qdSetRider("+k+",this.value)'>"+
+      "<option value='-1'>Brak zawodnika</option>"+
+      pool.map(n=>"<option value='"+team.riders.indexOf(n)+"'"+(cu===n?" selected":"")+">"+escq(n)+"</option>").join("")+"</select>"+
+      (cu?"<button class='btn small danger' title='Zdejmij zawodnika' data-onclick='UI.qdClearRider("+k+")'>X</button>":"")+"</div>";
+  });
+  html+="<div class='lg-hints' style='margin-top:8px'><div>Drużyna "+(i+1)+" z 4. Numery 1–4 jadą w biegach, R (nr 5, rezerwa) może zastąpić dowolnego kolegę. Rezerwa jest opcjonalna.</div></div>";
+  $("qdLineupBody").innerHTML=html;
+}
+UI.qdSetRider=function(k,val){
+  const w=QdW;if(!w)return;
+  const team=S.teams[w.slots[w.step]],ro=w.rost[w.step].r;
+  if(!team)return;
+  if(val==="-1"){ro[k]=null;renderQdLineup();return;}
+  const name=team.riders[+val];
+  if(!name||ro.some((n,j)=>j!==k&&n===name)){UI.toast("❌ Ten zawodnik jest już w składzie.");renderQdLineup();return;}
+  ro[k]=name;renderQdLineup();
+};
+UI.qdClearRider=function(k){const w=QdW;if(!w)return;w.rost[w.step].r[k]=null;renderQdLineup();};
+UI.qdLineupBack=function(){
+  const w=QdW;if(!w)return;
+  if(w.step>0){w.step--;renderQdLineup();window.scrollTo(0,0);}
+  else UI.screen("qdSetup");
+};
+UI.qdLineupNext=function(){
+  const w=QdW;if(!w)return;
+  const ro=w.rost[w.step].r;
+  if(!ro[0]||!ro[1]||!ro[2]||!ro[3]){UI.toast("Przypisz zawodników nr 1–4.");return;}
+  if(w.step<3){w.step++;renderQdLineup();window.scrollTo(0,0);return;}
+  UI.qdLaunch();
+};
+UI.qdLaunch=function(){
+  const w=QdW;if(!w)return;
+  UI.openModal("<h3>Nazwa zawodów</h3><input type='text' id='qdName' placeholder='np. Speedway World Cup w Warszawie' style='margin-bottom:12px'><button class='btn primary' id='qdNameOk'>Zapisz i rozpocznij</button><button class='btn' id='qdNameSkip'>Domyślna nazwa</button>");
+  const fin=v=>{
+    const c=qdNewComp(w,cleanText(v,80)||"Czwórmecz");
+    if(!mutate(()=>{S.comps[c.id]=c;S.current=c.id;S.settings.lastComp=c.id;}))return;
+    prestartSnapshot(c);
+    QdW=null;UI.closeModal();UI.screen("quad");
+  };
+  $("qdNameOk").onclick=()=>fin($("qdName").value);
+  $("qdNameSkip").onclick=()=>fin("");
+};
+
+/* ===== Interakcje ===== */
+UI.qdMoveSlot=function(hi,si,dir){
+  const c=qdc();if(!c||!qdEditable(c,hi))return;
+  const h=c.qd.heats[hi];
+  const fins=qdFinishers(h),rest=h.order.filter(i=>!fins.includes(i));
+  const idx=fins.indexOf(si),n=idx+dir;
+  if(idx<0||n<0||n>=fins.length)return;
+  [fins[idx],fins[n]]=[fins[n],fins[idx]];
+  if(!mutate(()=>{h.order=[...fins,...rest];}))return;
+  qdRenderHeatOnly(hi);
+};
+UI.qdToggleMenu=function(hi,si){
+  const c=qdc();if(!c||!qdEditable(c,hi))return;
+  const h=c.qd.heats[hi];
+  h.menuOpen=h.menuOpen===si?null:si;
+  qdRenderHeatOnly(hi);
+};
+UI.qdSetExcl=function(hi,si,code){
+  const c=qdc();if(!c||!qdEditable(c,hi))return;
+  const h=c.qd.heats[hi],s=h.slots[si];
+  const wasSet=s.excl===code;
+  if(!mutate(()=>{
+    s.excl=wasSet?null:code;
+    if(!wasSet)s.exclSeq=++lgExclSeq;
+    qdReorder(h);
+  }))return;
+  qdRenderHeatOnly(hi);
+};
+UI.qdConfirmHeat=function(hi){
+  const c=qdc();if(!c)return;
+  const h=c.qd.heats[hi],fo=qdFirstOpen(c);
+  if(fo!==hi&&fo>=0){UI.toast("Najpierw zatwierdź bieg "+qdLabel(c.qd.heats[fo])+".");return;}
+  if(!qdReady(h)){UI.toast("Zawodnicy tego biegu nie są jeszcze ustaleni.");return;}
+  if(!mutate(()=>{h.score=qdCompute(h);h.confirmed=true;h.menuOpen=null;}))return;
+  qdRender();
+  const ni=qdFirstOpen(qdc());
+  if(ni>=0){
+    const el=$("qdheat-"+qdc().qd.heats[ni].n);
+    if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),60);
+  }
+};
+UI.qdEditHeat=function(hi){
+  const c=qdc();if(!c)return;
+  const h=c.qd.heats[hi];
+  if(!mutate(()=>{h.confirmed=false;h.score=null;}))return;
+  qdRender();
+};
+UI.qdResetHeat=function(hi){
+  const c=qdc();if(!c)return;
+  const h=c.qd.heats[hi];
+  UI.confirm("Zresetować bieg "+escq(qdLabel(h))+" do stanu sprzed wyścigu?",()=>{
+    if(!mutate(()=>{c.qd.heats[hi]=qdNewHeat(c.qd.teams,h.n);}))return;
+    qdRender();
+  });
+};
+UI.qdResetAll=function(){
+  const c=qdc();if(!c)return;
+  UI.confirm("Zresetować <b>całe zawody</b>?<br><small style='color:var(--text-muted)'>Wszystkie wyniki i wykluczenia zostaną usunięte. Tej operacji nie można cofnąć.</small>",()=>{
+    if(!mutate(()=>{c.qd.heats=qdBuildHeats(c.qd.teams);c.qd.manual=c.qd.teams.map((_,i)=>i);}))return;
+    qdRender();
+  });
+};
+UI.qdTieMove=function(t,dir){
+  const c=qdc();if(!c||!qdAllDone(c))return;
+  const tb=qdTable(c),i=tb.findIndex(s=>s.t===t),j=i+dir;
+  if(i<0||j<0||j>=tb.length||!qdEq(tb[i],tb[j]))return;
+  if(!mutate(()=>{
+    const man=c.qd.manual&&c.qd.manual.length===4?c.qd.manual:[0,1,2,3];
+    const a=man.indexOf(tb[i].t),b=man.indexOf(tb[j].t);
+    [man[a],man[b]]=[man[b],man[a]];
+    c.qd.manual=man;
+  }))return;
+  qdRender();
+};
+UI.qdEditTime=function(hi){
+  const c=qdc();if(!c)return;
+  const h=c.qd.heats[hi];
+  LgTime={heatIdx:hi,ms:h.time?Math.round(parseFloat(h.time.replace(",","."))*1000):0};
+  let html="<h3>Czas biegu "+escq(qdLabel(h))+"</h3>"+
+    "<p style='text-align:center;color:var(--text-muted);font-size:0.75rem;margin:0 0 10px'>Wpisz cyfry</p>"+
+    "<div class='timedisplay' id='lgTimeVal'>"+fmtHeatTime(LgTime.ms)+"</div><div class='numpad'>";
+  for(let d=1;d<=9;d++)html+="<button class='btn' data-onclick='UI.lgTimeDigit("+d+")'>"+d+"</button>";
+  html+="<button class='btn secondary' data-onclick='UI.lgTimeBackspace()'>&#9003;</button>"+
+    "<button class='btn' data-onclick='UI.lgTimeDigit(0)'>0</button>"+
+    "<button class='btn danger' data-onclick='UI.lgTimeClear()'>C</button></div>"+
+    "<button class='btn primary' style='margin-top:14px' data-onclick='UI.qdTimeSave()'>Zapisz</button>"+
+    "<button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>";
+  UI.openModal(html);
+  UI._timeKeyHandler=ev=>{
+    if(ev.key>="0"&&ev.key<="9"){ev.preventDefault();UI.lgTimeDigit(+ev.key);}
+    else if(ev.key==="Backspace"||ev.key==="Delete"){ev.preventDefault();UI.lgTimeBackspace();}
+    else if(ev.key==="Enter"){ev.preventDefault();UI.qdTimeSave();}
+  };
+  document.addEventListener("keydown",UI._timeKeyHandler);
+};
+UI.qdTimeSave=function(){
+  const c=qdc();const h=c&&c.qd.heats[LgTime.heatIdx];
+  UI.closeModal();
+  if(!h)return;
+  if(!mutate(()=>{h.time=LgTime.ms?fmtHeatTime(LgTime.ms):null;}))return;
+  qdRender();
+};
+UI.qdSortToggle=function(){QdSort=!QdSort;const c=qdc();if(!c)return;$("qdTeamsWrap").innerHTML=qdTeamsHtml(c);$("qdScorebar").innerHTML=qdScorebarHtml(c);};
+UI.qdView=function(v){
+  const c=qdc();if(!c)return;
+  QdView=v;qdApplyView();
+  $("qdScorebar").innerHTML=qdScorebarHtml(c);
+  if(v==="heats"){
+    const i=qdFirstOpen(c);
+    const el=$("qdheat-"+c.qd.heats[i>=0?i:c.qd.heats.length-1].n);
+    if(el)el.scrollIntoView({behavior:"auto",block:"start"});
+  }else window.scrollTo(0,0);
+};
+UI.qdScrollNext=function(){
+  const c=qdc();if(!c)return;
+  const i=qdFirstOpen(c);
+  if(i<0){UI.toast("Wszystkie biegi zostały zatwierdzone.");return;}
+  const el=$("qdheat-"+c.qd.heats[i].n);
+  if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
+};
+UI.qdLeave=function(){
+  const c=qdc();
+  let msg="Na pewno wrócić do ekranu głównego?<br><small style='color:var(--text-muted)'>Bieżący stan zawodów zostanie automatycznie zapisany.</small>";
+  if(c){
+    const hs=c.qd.heats.filter(h=>!h.extra);
+    const open=hs.filter(h=>!h.confirmed).length,done=hs.filter(h=>h.confirmed).length;
+    if(done>0&&open>0)msg="<b style='color:var(--amber)'>⚠ Uwaga: zawody w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
+  }
+  UI.confirm(msg,()=>{UI.screen("home");});
+};
+
+/* ===== Render ===== */
+function qdApplyView(){
+  const t=$("qdTeamsWrap"),h=$("qdHeatsWrap");
+  if(t)t.style.display=QdView==="teams"?"":"none";
+  if(h)h.style.display=QdView==="heats"?"":"none";
+}
+function qdRender(){
+  const c=qdc();if(!c){UI.screen("home");return;}
+  if(QdViewFor!==c.id){QdViewFor=c.id;QdView=c.qd.heats.some(h=>h.confirmed)?"heats":"teams";}
+  $("qdTeamsWrap").innerHTML=qdTeamsHtml(c);
+  $("qdHeatsWrap").innerHTML=c.qd.heats.map((_,i)=>qdHeatHtml(c,i)).join("");
+  $("qdScorebar").innerHTML=qdScorebarHtml(c);
+  qdApplyView();
+}
+function qdRenderHeatOnly(hi){
+  const c=qdc();if(!c)return;
+  const el=$("qdheat-"+c.qd.heats[hi].n);
+  if(!el){qdRender();return;}
+  el.outerHTML=qdHeatHtml(c,hi);
+}
+function qdTeamsHtml(c){
+  const tb=qdTable(c),done=qdAllDone(c);
+  const started=c.qd.heats.some(h=>h.confirmed&&!h.extra);
+  const order=[0,1,2,3];
+  if(QdSort)order.sort((x,y)=>tb.findIndex(s=>s.t===x)-tb.findIndex(s=>s.t===y));
+  return order.map(t=>{
+    const tm=c.qd.teams[t],tot=qdTotals(c,t);
+    const idx=tb.findIndex(s=>s.t===t),row=tb[idx];
+    const cols=Math.max(5,...tot.map(x=>x.cells.length));
+    let head="<th class='lg-nm'>Zawodnik</th>";
+    for(let i=1;i<=Math.min(cols,7);i++)head+="<th>"+i+"</th>";
+    head+="<th>S</th>";
+    const rows=[0,1,2,3,4].map(k=>{
+      const nm=tm.riders[k];
+      if(!nm&&k===4)return "";
+      const x=tot[k];
+      const cells=[];
+      for(let i=0;i<Math.min(cols,7);i++){
+        const cell=x.cells[i];
+        if(!cell)cells.push("<td class='lg-res0'>-</td>");
+        else if(cell.excl!=null)cells.push("<td class='lg-res0'>"+escq(cell.excl)+"</td>");
+        else cells.push("<td>"+cell.pts+"</td>");
+      }
+      const full=normName(nm||"—");
+      const sp=full.indexOf(" ");
+      const fn=sp>0?full.slice(0,sp):"";
+      const ln=sp>0?full.slice(sp+1):full;
+      return "<tr><td class='lg-nm'><span class='lg-num'>"+(k===4?"R":(k+1))+"</span> <span class='lg-rname'>"+(fn?"<small class='fn'>"+escq(fn)+"</small>":"")+"<b class='ln'>"+escq(ln)+"</b></span></td>"+cells.join("")+
+        "<td class='lg-sum'>"+(x.cells.length?x.pts:"")+"</td></tr>";
+    }).join("");
+    let tie="";
+    if(done&&row.tie){
+      const up=idx>0&&qdEq(row,tb[idx-1]),dn=idx<tb.length-1&&qdEq(row,tb[idx+1]);
+      tie="<span class='pm-tie'><button class='cardbtn' "+(up?"":"disabled")+" title='Remis — wyżej' data-onclick='UI.qdTieMove("+t+",-1)'>"+ICON_UP+"</button>"+
+        "<button class='cardbtn' "+(dn?"":"disabled")+" title='Remis — niżej' data-onclick='UI.qdTieMove("+t+",1)'>"+ICON_DOWN+"</button></span>";
+    }
+    const pc=started?"<div class='qd-places'>Miejsca: <b>1.</b> ×"+row.n[0]+" &nbsp;<b>2.</b> ×"+row.n[1]+" &nbsp;<b>3.</b> ×"+row.n[2]+" &nbsp;<b>4.</b> ×"+row.n[3]+"</div>":"";
+    return "<div class='lg-teamcard'><div class='lg-teamhead'><span class='qd-dot' style='background:"+QD_COLORS[tm.color].c+"'></span>"+
+      "<div class='lg-tname'>"+escq(tm.name)+"</div>"+tie+
+      (started?"<span class='pm-place' style='margin-left:auto'>"+(idx+1)+".</span>":"")+
+      "<div class='lg-tscore' style='"+(started?"margin-left:6px":"")+"'>"+(started?row.pts:"")+"</div></div>"+
+      "<div class='tblwrap'><table class='lg-rt'><thead><tr>"+head+"</tr></thead><tbody>"+rows+"</tbody></table></div>"+pc+"</div>";
+  }).join("");
+}
+function qdHeatHtml(c,hi){
+  const hs=c.qd.heats,h=hs[hi];
+  const fo=qdFirstOpen(c),ready=qdReady(h);
+  const active=!h.confirmed&&hi===fo&&ready;
+  const dim=!h.confirmed&&!active;
+  const tag=h.n>16?"<span class='pm-tag'>TRENERZY</span>":"";
+  const fins=qdFinishers(h);
+  let rows;
+  if(!ready){
+    rows="<div style='color:var(--text-muted);font-size:0.82rem;text-align:center;padding:6px'>Biegi 17–20 obsadzają trenerzy — wybór zawodników pojawi się w kolejnym pakiecie.</div>";
+  }else{
+    rows=h.order.map(si=>{
+      const s=h.slots[si],tm=c.qd.teams[s.t],col=QD_COLORS[tm.color].c;
+      const finPos=fins.indexOf(si);
+      const pts=finPos>=0?QD_PTS[Math.min(finPos,3)]:null;
+      const mk=s.excl?("<span class='mk'>"+escq(s.excl)+"</span>"):"";
+      const nameHtml="<span class='qd-gate' title='Bramka "+s.gate+"'>"+s.gate+"</span><span class='name'>"+escq(qdName(c,s.t,s.ri))+mk+" <small style='color:var(--text-muted)'>· "+escq(tm.name)+"</small></span>";
+      let posHtml="";
+      if(finPos>=0)posHtml=h.confirmed?("<span class='pos'>"+(finPos+1)+". — "+pts+" pkt.</span>"):("<span class='pos'>"+(finPos+1)+".</span>");
+      let btns="";
+      if(active&&s.excl){
+        btns="<div class='rcardbtns'><button class='cardbtn flag on' title='Zmień lub usuń wykluczenie' data-onclick='UI.qdToggleMenu("+hi+","+si+")'>"+ICON_FLAG+"</button></div>";
+      }else if(active){
+        btns="<div class='rcardbtns'>"+
+          "<button class='cardbtn' "+(finPos<=0?"disabled":"")+" title='Przesuń w górę' data-onclick='UI.qdMoveSlot("+hi+","+si+",-1)'>"+ICON_UP+"</button>"+
+          "<button class='cardbtn' "+((finPos<0||finPos>=fins.length-1)?"disabled":"")+" title='Przesuń w dół' data-onclick='UI.qdMoveSlot("+hi+","+si+",1)'>"+ICON_DOWN+"</button>"+
+          "<button class='cardbtn flag"+(h.menuOpen===si?" on":"")+"' title='Wykluczenia' data-onclick='UI.qdToggleMenu("+hi+","+si+")'>"+ICON_FLAG+"</button></div>";
+      }
+      const menu=(active&&h.menuOpen===si)?qdMenuHtml(c,hi,si):"";
+      return "<div class='rcard"+(s.excl?" ex locked":"")+"' style='border-left:4px solid "+col+"'>"+nameHtml+posHtml+btns+"</div>"+menu;
+    }).join("");
+  }
+  const actions="<div class='heatactions'>"+
+    (ready?"<button class='iconbtn sm' title='Czas wyścigu' data-onclick='UI.qdEditTime("+hi+")'>"+ICON_CLOCK+"</button>":"")+
+    (h.confirmed
+      ?"<button class='iconbtn sm' title='Edytuj bieg' data-onclick='UI.qdEditHeat("+hi+")'>"+ICON_EDIT+"</button>"+
+       "<button class='iconbtn sm' title='Reset biegu' data-onclick='UI.qdResetHeat("+hi+")'>"+ICON_RESET+"</button>"
+      :active
+      ?"<button class='btn small primary' style='margin:0' data-onclick='UI.qdConfirmHeat("+hi+")'>&#10004; Zatwierdź</button>"+
+       "<button class='iconbtn sm' title='Reset biegu' data-onclick='UI.qdResetHeat("+hi+")'>"+ICON_RESET+"</button>"
+      :"<span style='color:var(--text-muted);font-size:0.8rem'>"+ICON_LOCK_SM+(ready?"Zablokowany":"Oczekuje")+"</span>")+
+    "</div>";
+  const scoreTxt="";
+  return "<div id='qdheat-"+h.n+"' class='heat"+(h.confirmed?" done":"")+(active?" active":"")+(dim?" dim":"")+"'>"+
+    "<div class='heathead'><span class='heatnum'>BIEG "+escq(qdLabel(h))+tag+(h.time?"<span class='heattime'>"+escq(h.time)+"</span>":"")+"</span>"+
+    "<div class='lg-headright'>"+(scoreTxt?"<div class='lg-heatscore'>"+scoreTxt+"</div>":"")+actions+"</div></div>"+
+    "<div class='hrows'>"+rows+"</div></div>";
+}
+function qdMenuHtml(c,hi,si){
+  const h=c.qd.heats[hi],s=h.slots[si];
+  return "<div class='lg-menu'><div class='sublabel'>Wykluczenie</div><div class='mrow'>"+
+    LG_EXCL_CODES.map(code=>"<button class='btn small "+(s.excl===code?"primary":"secondary")+"' data-onclick='UI.qdSetExcl("+hi+","+si+",\""+code+"\")'>"+code+"</button>").join("")+"</div></div>";
+}
+function qdScorebarHtml(c){
+  const tv=QdView==="teams";
+  const hs=c.qd.heats,fo=qdFirstOpen(c);
+  const h=hs[fo>=0?fo:hs.length-1];
+  const tb=qdTable(c);
+  const chips=[0,1,2,3].map(t=>{
+    const tm=c.qd.teams[t],row=tb.find(s=>s.t===t);
+    return "<div class='qd-sbc' style='border-color:"+QD_COLORS[tm.color].c+"'><span class='n'>"+escq(tm.name)+"</span><b>"+row.pts+"</b></div>";
+  }).join("");
+  return "<div class='lg-scorebar-inner'><div class='lg-sbrow' style='align-items:center'>"+
+    fbtn("","Ekran główny","UI.qdLeave()","home")+
+    fbtn(tv?"active":"","Składy","UI.qdView(\"teams\")","teams")+
+    fbtn(tv?"":"active","Wyścigi","UI.qdView(\"heats\")","flag")+
+    (tv?fbtn(QdSort?"active":"","Sortuj drużyny wg miejsca","UI.qdSortToggle()","sort"):fbtn("","Przejdź do bieżącego wyścigu","UI.qdScrollNext()","next"))+
+    "<div class='fbar-lbl big'>"+(tv?"Składy":"Wyścigi")+"</div>"+
+    fbtn("danger","Reset całych zawodów","UI.qdResetAll()","reset")+"</div>"+
+    "<div class='pm-sblabel'>"+(fo>=0?"Bieg ":"Ostatni bieg ")+escq(qdLabel(h))+"</div>"+
+    "<div class='qd-sb'>"+chips+"</div></div>";
 }
 
 renderHome();
