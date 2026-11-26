@@ -1743,7 +1743,13 @@ function renderTeams(){
   $("teamsTitle").textContent=nat?"DRUŻYNY NARODOWE":"DRUŻYNY LIGOWE";
   const list=S.teams.map((t,i)=>({t,i})).filter(o=>teamIsNat(o.t)===nat);
   if(!list.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak drużyn — dodaj pierwszą.</p>";return;}
-  el.innerHTML=list.map(({t,i})=>"<div class='ri'><span>"+escq(t.name)+" <small style='color:var(--text-muted)'>("+t.riders.length+")</small></span><span><button class='btn small' data-open='"+i+"'>Zawodnicy</button><button class='btn small' data-edit='"+i+"'>Edytuj</button></span></div>").join("");
+  const plural=n=>{const m10=n%10,m100=n%100;return n===1?"zawodnik":(m10>=2&&m10<=4&&!(m100>=12&&m100<=14))?"zawodnicy":"zawodników";};
+  list.sort((x,y)=>x.t.name.localeCompare(y.t.name,"pl"));
+  el.innerHTML=list.map(({t,i})=>{
+    const n=t.riders.filter(r=>r!==LG_ZZ_NAME).length;
+    return "<div class='tm-row'><div class='tm-info'><div class='tm-name'>"+escq(t.name)+"</div><div class='tm-sub'>"+n+" "+plural(n)+"</div></div>"+
+      "<div class='tm-btns'><button class='btn small primary' data-open='"+i+"'>Zawodnicy</button><button class='btn small secondary' data-edit='"+i+"'>Edytuj</button></div></div>";
+  }).join("");
   el.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>UI.openTeam(+b.dataset.open));
   el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>UI.editTeam(+b.dataset.edit));
 }

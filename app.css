@@ -534,3 +534,11 @@ body {
 .qd-sbc .n { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qd-sbc b { font-size: 1.2rem; font-weight: 900; }
 #quad { padding-bottom: 200px; }
+
+/* Lista drużyn: karta na wiersz, stała kolumna przycisków */
+.tm-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px; background: var(--ov-06); border: 1px solid var(--ov-15); border-radius: 12px; }
+.tm-info { flex: 1; min-width: 0; }
+.tm-name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+.tm-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.tm-btns { display: flex; gap: 6px; flex: 0 0 auto; }
+.tm-btns .btn { margin: 0; }
