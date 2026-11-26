@@ -866,6 +866,7 @@ const UI={
       const el=document.getElementById("heat-"+next.n);
       if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),50);
     }
+    rtIndividual(cur(),h);
   },
 
   editHeat(heatN){
@@ -2500,6 +2501,7 @@ UI.lgConfirmHeat=function(heatIdx){
   }
   if(!mutate(()=>{h.score=lgComputeScore(h);h.confirmed=true;h.menuOpen=null;}))return;
   lgRender();
+  rtLeague(m,cur(),heatIdx);
   /* Automatyczne przewinięcie do najbliższego otwartego wyścigu. */
   const ni=lgFirstOpenIdx(m);
   if(ni>=0){
@@ -3305,6 +3307,7 @@ UI.pmConfirmHeat=function(hi){
   if(!pmReady(h)||h.slots.some(s=>s.t==null||s.ri==null)){UI.toast("Drużyny tego biegu nie są jeszcze ustalone.");return;}
   if(!mutate(()=>{h.score=pmCompute(c,h);h.confirmed=true;h.menuOpen=null;pmSyncFinals(c);}))return;
   pmRender();
+  rtPairs(pmc(),hi);
   const ni=pmFirstOpen(pmc());
   if(ni>=0){
     const el=$("pmheat-"+pmc().pm.heats[ni].n);
@@ -4016,6 +4019,7 @@ UI.qdConfirmHeat=function(hi){
   QdNomEdit=false;
   if(!mutate(()=>{h.score=qdCompute(h);h.confirmed=true;h.menuOpen=null;}))return;
   qdRender();
+  rtQuad(qdc(),hi);
   const ni=qdFirstOpen(qdc());
   if(ni>=0){
     const el=$("qdheat-"+qdc().qd.heats[ni].n);
@@ -4556,6 +4560,83 @@ UI.baseExportSheet=function(){
     }catch(e){}
   },1500);
 })();
+/* ===================== TOAST Z WYNIKIEM BIEGU (z opcją „Cofnij”) ===================== */
+/* Pokazuje się po zatwierdzeniu biegu w każdych rozgrywkach: 5 s, na środku ekranu, nowy zastępuje stary. */
+let RtTimer=null;
+function rtShow(text,undo){
+  const old=document.getElementById("rtoast");if(old)old.remove();
+  clearTimeout(RtTimer);
+  /* Przezroczyste tło łapie stuknięcie poza kartą: działa jak OK i nie przepuszcza dotyku do ekranu pod spodem. */
+  const wrap=document.createElement("div");wrap.id="rtoast";wrap.className="rtoast-wrap";
+  const close=()=>{clearTimeout(RtTimer);wrap.remove();};
+  wrap.addEventListener("click",ev=>{if(ev.target===wrap)close();});
+  const el=document.createElement("div");el.className="rtoast";el.setAttribute("role","status");
+  const sp=document.createElement("span");sp.textContent=text;el.appendChild(sp);
+  const row=document.createElement("div");row.className="rt-btns";
+  if(undo){
+    const b=document.createElement("button");b.type="button";b.className="rt-undo";b.textContent="COFNIJ";
+    b.addEventListener("click",()=>{close();undo();});
+    row.appendChild(b);
+  }
+  const ok=document.createElement("button");ok.type="button";ok.className="rt-ok";ok.textContent="OK";
+  ok.addEventListener("click",close);
+  row.appendChild(ok);
+  el.appendChild(row);wrap.appendChild(el);
+  document.body.appendChild(wrap);
+  RtTimer=setTimeout(close,5000);
+}
+function rtScroll(id){const el=document.getElementById(id);if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),60);}
+/* Nazwisko; przy powtórzeniu nazwiska w zawodach — z inicjałem imienia (np. „Woryna W”). */
+function rtShortName(name,all){
+  const parts=String(name||"").trim().split(/\s+/),last=parts[parts.length-1]||"";
+  if(parts.length>1&&all.filter(n=>String(n).trim().split(/\s+/).pop()===last).length>1)return last+" "+parts[0][0];
+  return last;
+}
+function rtLeague(m,c,idx){
+  const h=m.heats[idx],t=lgCumulative(m,m.heats.length);
+  const undo=()=>{UI.lgEditHeat(idx);rtScroll("lgheat-"+h.n);};
+  if(m.heats.every(x=>x.confirmed)){
+    const w=t.home>t.away?c.home.name+" "+t.home+":"+t.away:(t.away>t.home?c.away.name+" "+t.away+":"+t.home:"Remis "+t.home+":"+t.away);
+    rtShow("Koniec zawodów · "+(t.home===t.away?w:"wygrywa "+w),undo);return;
+  }
+  rtShow(c.home.name+"-"+c.away.name+" "+h.score.home+":"+h.score.away+" ("+t.home+":"+t.away+")",undo);
+}
+function rtPairs(c,hi){
+  const h=c.pm.heats[hi],tb=pmTable(c),P=t=>(tb.find(r=>r.t===t)||{pts:0}).pts;
+  const n=t=>c.pm.teams[t].name;
+  const undo=()=>{UI.pmEditHeat(hi);rtScroll("pmheat-"+h.n);};
+  if(pmFirstOpen(c)<0){
+    const w=pmHeatWinner(c,h);
+    rtShow("Koniec zawodów · "+(w==null?"remis":"wygrywa "+n(w))+" ("+n(h.a)+" "+h.score.a+":"+h.score.b+" "+n(h.b)+")",undo);return;
+  }
+  /* Sumy punktów tylko w biegach zasadniczych — w półfinałach i finale wyświetlamy sam wynik biegu. */
+  const regular=!h.extra&&h.n<=pmRR(c);
+  rtShow(n(h.a)+"-"+n(h.b)+" "+h.score.a+":"+h.score.b+(regular?" ("+P(h.a)+":"+P(h.b)+")":""),undo);
+}
+function rtQuad(c,hi){
+  const h=c.qd.heats[hi],tb=qdTable(c);
+  const undo=()=>{UI.qdEditHeat(hi);rtScroll("qdheat-"+h.n);};
+  if(qdFirstOpen(c)<0){
+    if(qdEq(tb[0],tb[1])){rtShow("Remis o 1. miejsce — bieg dodatkowy",undo);return;}
+    rtShow("Koniec zawodów · wygrywa "+c.qd.teams[tb[0].t].name+" ("+tb[0].pts+" pkt)",undo);return;
+  }
+  const parts=h.order.map(si=>{const t=h.slots[si].t,sc=h.score.pts[t];return c.qd.teams[t].name+" "+sc+" ("+tb.find(r=>r.t===t).pts+")";});
+  rtShow(parts.join(", "),undo);
+}
+function rtIndividual(c,h){
+  const st=standings(c),res=heatResults(h),all=Object.values(c.mapping).filter(Boolean);
+  const undo=()=>{UI.editHeat(h.n);rtScroll("heat-"+h.n);};
+  const nm=num=>rtShortName(c.mapping[num],all);
+  if(compHeats(c).filter(x=>!x.extra).every(x=>x.confirmed)){
+    const top=Object.values(st).sort(cmpStats)[0];
+    if(top){rtShow("Koniec biegów · prowadzi "+nm(top.num)+" ("+top.pts+" pkt)",undo);return;}
+  }
+  const fin=heatFinishOrder(h)||[];
+  const marked=Object.keys(res).map(Number).filter(k=>res[k].mark&&!fin.includes(k));
+  const parts=[...fin,...marked].map(num=>nm(num)+" "+(res[num].mark?res[num].mark:res[num].pts)+(st[num]?" ("+st[num].pts+")":""));
+  rtShow(parts.join(", "),undo);
+}
+
 /* Globalna obsługa nieoczekiwanych błędów — tylko komunikat; nic nie opuszcza urządzenia. */
 (function(){
   let last=0;
