@@ -72,6 +72,16 @@
   </div>
 
   <div class="card">
+    <h3>BAZA ZAWODNIK&#211;W Z ARKUSZA</h3>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 8px;text-align:center">Plik CSV/TSV/TXT: Imi&#281; &#183; Nazwisko &#183; J/S &#183; Dru&#380;yna ligowa &#183; Dru&#380;yna narodowa &#183; Rozgrywki. Import tylko dopisuje i zmienia przypisania.</p>
+    <button class="btn" data-onclick="UI.baseLoadStarter()">Wczytaj baz&#281; startow&#261;</button>
+    <button class="btn" data-onclick="UI.pickBaseImport()">Importuj zawodnik&#243;w z arkusza</button>
+    <button class="btn" data-onclick="UI.baseTemplate()">Pobierz wz&#243;r pliku (CSV)</button>
+    <button class="btn" data-onclick="UI.baseExportSheet()">Eksportuj baz&#281; do arkusza (CSV)</button>
+    <input type="file" id="bdFile" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values" style="display:none" data-onchange="UI.baseImport(this)">
+  </div>
+
+  <div class="card">
     <h3>ZAPISANE ZAWODY</h3>
     <div id="savedList"></div>
   </div>
