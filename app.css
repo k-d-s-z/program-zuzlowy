@@ -542,3 +542,12 @@ body {
 .tm-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 .tm-btns { display: flex; gap: 6px; flex: 0 0 auto; }
 .tm-btns .btn { margin: 0; }
+
+/* Lista zawodników: jedna niska karta na zawodnika */
+.rl-row { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border-color); }
+.rl-info { flex: 1; min-width: 0; }
+.rl-name { font-weight: 600; overflow-wrap: anywhere; }
+.rl-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
+.rl-j { display: inline-block; font-size: 0.65rem; font-weight: 800; color: var(--warn); border: 1px solid var(--warn); border-radius: 5px; padding: 0 4px; margin-left: 4px; vertical-align: middle; }
+.rl-btns { display: flex; gap: 10px; flex: 0 0 auto; }
+.rl-btns .btn { margin: 0; }

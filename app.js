@@ -1046,23 +1046,13 @@ function renderRiderLib(){
     const gi=S.riders.indexOf(name);
     const club=teamOfRider(name);
     const isJr=!!(S.juniors||[]).includes(name);
-    if(gi<0)return "<div class='ri'><span>"+escq(name)+(club?" <small style='color:var(--text-muted)'>("+escq(club)+")</small>":"")+"</span><span>"+(series?"<button class='btn small danger' data-rr-name='"+escq(name)+"'>X</button>":"")+"</span></div>";
-    return "<div class='ri'><span>"+escq(name)+(club?" <small style='color:var(--text-muted)'>("+escq(club)+")</small>":"")+"</span><span>"+
-      "<button class='btn small "+(isJr?"secondary":"primary")+"' data-lib-s='"+gi+"'>S</button>"+
-      "<button class='btn small "+(isJr?"primary":"secondary")+"' data-lib-j='"+gi+"'>J</button> "+
-      "<button class='btn small' data-edit-rider='"+gi+"'>Edytuj</button>"+(series?"<button class='btn small danger' data-rr-name='"+escq(name)+"'>X</button>":"")+"</span></div>";
+    const info="<div class='rl-info'><div class='rl-name'>"+escq(name)+(isJr?" <span class='rl-j' title='Junior'>J</span>":"")+"</div>"+(club?"<div class='rl-sub'>"+escq(club)+"</div>":"")+"</div>";
+    const del=series?"<button class='btn small danger' data-rr-name='"+escq(name)+"' aria-label='Usuń z listy'>X</button>":"";
+    return "<div class='rl-row'>"+info+"<div class='rl-btns'>"+(gi<0?"":"<button class='btn small secondary' data-edit-rider='"+gi+"'>Edytuj</button>")+del+"</div></div>";
   }).join("");
   /* Nazwisko trafia do data-atrybutu (bezpieczny kontekst HTML) — nigdy do inline JS. */
   el.querySelectorAll("[data-edit-rider]").forEach(b=>b.onclick=()=>UI.editRider(+b.dataset.editRider));
   el.querySelectorAll("[data-rr-name]").forEach(b=>b.onclick=()=>UI.removeRosterRider(b.dataset.rrName));
-  el.querySelectorAll("[data-lib-s]").forEach(b=>b.onclick=()=>{
-    const n=S.riders[+b.dataset.libS];
-    if((S.juniors||[]).includes(n)){if(!mutate(()=>lgSetJuniorFlag(n,false)))return;renderRiderLib();if($("teamDetail").classList.contains("on"))renderTeamDetail();}
-  });
-  el.querySelectorAll("[data-lib-j]").forEach(b=>b.onclick=()=>{
-    const n=S.riders[+b.dataset.libJ];
-    if(!(S.juniors||[]).includes(n)){if(!mutate(()=>lgSetJuniorFlag(n,true)))return;renderRiderLib();if($("teamDetail").classList.contains("on"))renderTeamDetail();}
-  });
 }
 
 function renderSaved(){
