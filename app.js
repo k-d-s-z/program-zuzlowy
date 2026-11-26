@@ -4459,13 +4459,18 @@ function bdList(title,arr,max){
 }
 UI.pickBaseImport=function(){document.getElementById("bdFile").click();};
 /* Podgląd importu z bufora pliku (UTF-8, a przy błędzie Windows-1250). silent: bez okna, gdy nie ma żadnych zmian. */
-function bdPreview(buf,title,silent){
-  let text;
-  try{text=new TextDecoder("utf-8",{fatal:true}).decode(buf);}
-  catch(e){try{text=new TextDecoder("windows-1250").decode(buf);}catch(e2){if(!silent)UI.toast("❌ Nie udało się odczytać pliku.");return;}}
+function bdDecode(buf){
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(buf);}
+  catch(e){try{return new TextDecoder("windows-1250").decode(buf);}catch(e2){return null;}}
+}
+/* Skrót zawartości pliku (do wykrywania nowej wersji bazy). */
+function bdHash(buf){let h=2166136261;const u=new Uint8Array(buf);for(let i=0;i<u.length;i++){h^=u[i];h=Math.imul(h,16777619)>>>0;}return h.toString(36)+"-"+u.length;}
+function bdPreview(buf,title,silent,hash){
+  const text=bdDecode(buf);
+  if(text===null){if(!silent)UI.toast("❌ Nie udało się odczytać pliku.");return;}
   const plan=bdPlan(bdParseTable(text));
   if(plan.errors.length){if(!silent)UI.openModal("<h3>"+escq(title)+"</h3><p style='text-align:center;color:var(--danger-fg)'>"+plan.errors.map(escq).join("<br>")+"</p><button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");return;}
-  if(!plan.ops.length){if(!silent)UI.openModal("<h3>"+escq(title)+"</h3><p style='text-align:center'>Brak zmian — wszyscy zawodnicy z pliku ("+plan.rows+") są już w bazie z tymi samymi przypisaniami.</p>"+(plan.warns.length?bdList("Uwagi",plan.warns,10):"")+"<button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");return;}
+  if(!plan.ops.length){if(hash&&S.settings.starterApplied!==hash)mutate(()=>{S.settings.starterApplied=hash;});if(!silent)UI.openModal("<h3>"+escq(title)+"</h3><p style='text-align:center'>Brak zmian — wszyscy zawodnicy z pliku ("+plan.rows+") są już w bazie z tymi samymi przypisaniami.</p>"+(plan.warns.length?bdList("Uwagi",plan.warns,10):"")+"<button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");return;}
   let html="<h3>"+escq(title)+" — podgląd</h3><p style='text-align:center;font-size:0.85rem;margin:0'>Wierszy w pliku: <b>"+plan.rows+"</b>. Do zmiany: <b>"+plan.ops.length+"</b>"+(plan.same?" · bez zmian: "+plan.same:"")+"</p>"+
     "<div style='max-height:55vh;overflow:auto;margin:8px 0'>"+
     bdList("Nowi zawodnicy",plan.newRiders)+bdList("Nowe drużyny",plan.newTeams)+bdList("Nowe serie rozgrywek",plan.newSeries)+
@@ -4474,7 +4479,7 @@ function bdPreview(buf,title,silent){
     "<p style='font-size:0.72rem;color:var(--text-muted);text-align:center;margin:0 0 10px'>Import tylko dopisuje i zmienia przypisania — nic nie jest usuwane, a zapisane zawody zostają bez zmian.</p>"+
     "<button class='btn primary' id='bdok'>Importuj</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>";
   UI.openModal(html);
-  $("bdok").onclick=()=>{bdApply(plan);UI.closeModal();UI.toast("✔ Zaimportowano: "+plan.ops.length+" zawodników.");renderSaved();try{renderRiderLib();}catch(e){}};
+  $("bdok").onclick=()=>{bdApply(plan);if(hash)mutate(()=>{S.settings.starterApplied=hash;});UI.closeModal();UI.toast("✔ Zaimportowano: "+plan.ops.length+" zawodników.");renderSaved();try{renderRiderLib();}catch(e){}};
 }
 UI.baseImport=function(inp){
   const f=inp.files[0];if(!f)return;
@@ -4483,17 +4488,40 @@ UI.baseImport=function(inp){
   rd.onload=()=>bdPreview(rd.result,"Import zawodników",false);
   rd.readAsArrayBuffer(f);inp.value="";
 };
-/* Baza startowa dołączona do aplikacji (plik baza-startowa.csv, ten sam format co import z arkusza). */
-UI.baseLoadStarter=function(silent){
-  fetch("baza-startowa.csv",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error("http");return r.arrayBuffer();})
-    .then(buf=>bdPreview(buf,"Baza startowa",silent===true))
-    .catch(()=>{if(silent!==true)UI.toast("❌ Nie udało się wczytać bazy startowej (sprawdź połączenie).");});
+/* Baza zawodników dołączona do aplikacji (plik baza-startowa.csv w repozytorium, ten sam format co import z arkusza). */
+function bdFetchStarter(){
+  return fetch("baza-startowa.csv",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error("http");return r.arrayBuffer();});
+}
+UI.baseLoadStarter=function(){
+  bdFetchStarter().then(buf=>bdPreview(buf,"Baza zawodników",false,bdHash(buf)))
+    .catch(()=>{UI.toast("❌ Nie udało się pobrać bazy (sprawdź połączenie).");});
 };
-/* Przy pierwszym uruchomieniu (pusta baza) proponujemy wczytanie bazy startowej — tylko raz. */
-function bdOfferStarter(){
-  if(S.riders.length||Object.keys(S.comps||{}).length||(S.settings&&S.settings.starterAsked))return;
-  mutate(()=>{S.settings.starterAsked=true;});
-  UI.baseLoadStarter(true);
+function bdBanner(buf,hash){
+  const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
+  if(document.querySelector(".upd-banner"))b.style.top="calc(66px + env(safe-area-inset-top, 0px))";
+  b.innerHTML="<span>Dostępna nowa baza zawodników</span><button type='button' class='upd-go'>IMPORTUJ</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
+  b.querySelector(".upd-go").addEventListener("click",()=>{b.remove();bdPreview(buf,"Baza zawodników",false,hash);});
+  b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
+  document.body.appendChild(b);
+}
+/* Sprawdza, czy baza z repozytorium jest nowsza niż ostatnio zaimportowana lub już pokazana.
+   Pusta aplikacja dostaje od razu podgląd importu (raz); w pozostałych przypadkach — baner. */
+let BdLastCheck=0;
+function bdCheckStarter(){
+  BdLastCheck=Date.now();
+  bdFetchStarter().then(buf=>{
+    const hash=bdHash(buf),text=bdDecode(buf);
+    if(text===null)return;
+    const plan=bdPlan(bdParseTable(text));
+    if(plan.errors.length||!plan.rows)return;
+    const st=S.settings;
+    if(!plan.ops.length){if(st.starterApplied!==hash)mutate(()=>{st.starterApplied=hash;});return;}
+    const empty=!S.riders.length&&!Object.keys(S.comps||{}).length;
+    if(empty&&!st.starterAsked){mutate(()=>{st.starterAsked=true;});bdPreview(buf,"Baza startowa",true,hash);return;}
+    if(hash===st.starterApplied||hash===st.starterSeen)return;
+    mutate(()=>{st.starterSeen=hash;});
+    bdBanner(buf,hash);
+  }).catch(()=>{});
 }
 function bdCsvCell(v){v=String(v==null?"":v);return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function bdDownload(name,rows){
@@ -4519,9 +4547,10 @@ UI.baseExportSheet=function(){
 /* Trwałość danych: prosimy przeglądarkę, by nie czyściła bazy przy braku miejsca; przypomnienie o kopii zapasowej. */
 (function(){
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-BdLastCheck>30*60*1000)bdCheckStarter();});
   setTimeout(()=>{
     try{
-      bdOfferStarter();
+      bdCheckStarter();
       const n=Object.keys(S.comps||{}).length;
       const last=S.settings&&S.settings.lastBackup;
       if(n&&(!last||Date.now()-last>30*864e5)&&!(S.settings&&S.settings.backupNagAt&&Date.now()-S.settings.backupNagAt<7*864e5)){
