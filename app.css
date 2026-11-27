@@ -82,13 +82,13 @@ h3 { font-size: 0.85rem; color: var(--text-muted); text-align: center; letter-sp
 .btn:active { transform: scale(0.98); }
 
 .btn.primary {
-  background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 100%);
+  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
   color: #0b0f19;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #7dd3fc;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .btn.primary:hover {
-  background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
+  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
 }
 .btn.secondary {
   background: #374151;
@@ -339,9 +339,9 @@ table.pts td.plc:not(.tie) { cursor: default; }
 
 /* Ikona nawigacji g&#322;&#243;wnej &#8212; aktywny ekran pod&#347;wietlony jak przycisk primary */
 .iconbtn.active {
-  background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 100%);
+  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
   color: #0b0f19;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #7dd3fc;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
@@ -420,7 +420,7 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .fbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
 .fbtn { flex: 0 0 clamp(40px, 11.5vw, 52px); height: 46px; padding: 0; border-radius: 12px; background: var(--ov-06); border: 1px solid var(--ov-15); color: var(--text-strong); display: flex; align-items: center; justify-content: center; }
 .fbtn svg { width: 24px; height: 24px; fill: currentColor; }
-.fbtn.active { background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 100%); color: #0b0f19; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.fbtn.active { background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%); color: #0b0f19; border: 1px solid #7dd3fc; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 .fbtn.danger { margin-left: auto; color: #f87171; border-color: rgba(248,113,113,0.7); background: rgba(248,113,113,0.12); }
 .fbar-lbl { flex: 1; min-width: 0; max-width: 50%; font-size: 0.72rem; font-weight: 800; line-height: 1.15; text-align: center; color: var(--text-strong); background: none; border: 0; padding: 0 2px; text-transform: none; }
 .fbar-lbl.big { font-size: 1.4rem; letter-spacing: 0.3px; }

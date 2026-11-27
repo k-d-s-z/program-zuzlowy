@@ -22,7 +22,7 @@ Kewin;Nycz;J;Stal Gorzów;;
 Oskar;Paluch;J;Stal Gorzów;Polska;
 Paweł;Przedpełski;S;Stal Gorzów;;IMP
 Andres;Thomsen;S;Stal Gorzów;Dania;
-Vilads;Nagel;J;Stal Gorzów;Dania;SGP2
+Villads;Nagel;J;Stal Gorzów;Dania;SGP2
 Bartosz;Bańbor;J;Motor Lublin;Polska;SGP2
 Adam Bubba;Bednář;J;Motor Lublin;Czechy;SGP2
 Norick;Blödorn;S;Motor Lublin;Niemcy;
@@ -97,9 +97,61 @@ Adam;Nejezchleba;J;;Czechy;
 Bruno;Belan;J;;Czechy;
 Alan;Ciurzyński;J;Włókniarz Częstochowa;;
 Jason;Doyle;S;Włókniarz Częstochowa;Australia;
-Kacper;Halkiewicz;J;;;
-Franciszek;Karczewski;J;;;
-Nicolai;Klindt;S;;Dania;
-Szymon;Ludwiczak;J;;;
-Sebastian;Szostak;S;;;
-Rohan;Tungate;S;;Australia;SGP
+Kacper;Halkiewicz;J;Włókniarz Częstochowa;;
+Franciszek;Karczewski;J;Włókniarz Częstochowa;;
+Nicolai;Klindt;S;Włókniarz Częstochowa;Dania;
+Szymon;Ludwiczak;J;Włókniarz Częstochowa;;
+Sebastian;Szostak;S;Włókniarz Częstochowa;;
+Rohan;Tungate;S;Włókniarz Częstochowa;Australia;SGP
+Jan;Kvěch;S;ROW Rybnik;Czechy;SGP
+Oliwier;Gryt;J;ROW Rybnik;;
+Jakub;Jamróg;S;ROW Rybnik;;IMP
+Jacob;Pedersen;J;ROW Rybnik;Dania;
+Jaimon;Lidsey;S;ROW Rybnik;Australia;
+Franiszek;Majewski;J;ROW Rybnik;;
+Patryk;Wojdyło;S;ROW Rybnik;;
+Roch;Wujec;J;ROW Rybnik;;
+Paweł;Wyczyszczok;J;ROW Rybnik;;
+Mateusz;Bartkowiak;S;Wybrzeże Gdańsk;;
+Jacob;Boelcho;J;Wybrzeże Gdańsk;;
+Thomas H.;Jonasson;S;Wybrzeże Gdańsk;Szwecja;
+Eryk;Kamiński;J;Wybrzeże Gdańsk;;
+Timo;Lahti;S;Wybrzeże Gdańsk;Szwecja;
+Krystian;Pieszczek;S;Wybrzeże Gdańsk;;
+Jakub;Rzedzimski;J;Wybrzeże Gdańsk;;
+Timo;Sørensen;S;Wybrzeże Gdańsk;;
+Jacob;Thorseell;S;Wybrzeże Gdańsk;Szwecja;
+Benjamin;Basso;S;Wilki Krosno;Dania;
+Leon;Flint;S;Wilki Krosno;Wielka Brytania;
+Adrian;Gorzykowski;J;Wilki Krosno;;
+Kamil;Kawecki;J;Wilki Krosno;;
+Radosław;Kowalski;J;Wilki Krosno;;
+Oskar;Kręglicki;J;Wilki Krosno;;
+Aleksandr;Łoktajew;S;Wilki Krosno;Ukraina;
+Zoltan;Lovas;J;Wilki Krosno;Węgry;
+Vaclav;Milik;S;Wilki Krosno;Czechy;
+Tobiasz;Musielak;S;Wilki Krosno;;IMP
+Mateusz;Szczepaniak;S;Wilki Krosno;;
+Arkadiusz;Wąchała;J;Wilki Krosno;;
+Matej;Žagar;S;Wilki Krosno;Słowenia;
+Luke;Becker;S;Ostrovia Ostrów;USA;
+Frederik;Jacobsen;S;Ostrovia Ostrów;Dania;
+Nikodem;Łuczak;J;Ostrovia Ostrów;;
+Antoni;Mencel;S;Ostrovia Ostrów;;
+Matias;Nielsen;S;Ostrovia Ostrów;;
+Piotr;Rudowicz;J;Ostrovia Ostrów;;
+Dimitri;Berge;S;PSŻ Poznań;Francja;SEC
+Tom;Brennan;S;PSŻ Poznań;Wielka Brytania;SEC
+Kai;Huckenbeck;S;PSŻ Poznań;Niemcy;SEC
+Oskar;Hurysz;S;PSŻ Poznań;;
+Tobiasz Jakub;Musielak;J;PSŻ Poznań;;
+Bartosz;Smektała;S;PSŻ Poznań;;
+Kacper;Teska;J;PSŻ Poznań;;
+Kamil;Witkowski;J;PSŻ Poznań;;
+Oskar;Fajfer;S;Stal Rzeszów;;
+Mads;Hansen;S;Stal Rzeszów;;
+Rasmus;Jensen;S;Stal Rzeszów;Dania;
+Josh;Pickering;S;Stal Rzeszów;Australia;
+Adrian;Przybyło;J;Stal Rzeszów;;
+Krzysztof;Sadurski;S;Stal Rzeszów;;
+Patryk;Surowiec;J;Stal Rzeszów;;
