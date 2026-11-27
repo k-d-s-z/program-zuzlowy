@@ -4360,8 +4360,10 @@ function bdParseTable(text){
 }
 function bdIsNone(v){const k=bdKey(v);return k===""||k==="brak"||k==="nie"||k==="none"||k==="null";}
 /* Buduje plan zmian i ostrzeżenia z wiersza tabeli; niczego nie zapisuje. */
-function bdPlan(table){
-  const plan={errors:[],warns:[],newRiders:[],catChanges:[],leagueMoves:[],natMoves:[],newTeams:[],newSeries:[],seriesAdds:0,seriesAddList:[],ops:[],rows:0,same:0};
+function bdPlan(table,fresh){
+  /* fresh: plan liczony względem PUSTEJ bazy (tryb „zastąp”); zachowujemy tylko nazwy istniejących serii rozgrywek. */
+  const B=fresh?{riders:[],juniors:[],teams:[],rosters:Object.fromEntries(Object.keys(S.rosters).map(k=>[k,[]]))}:S;
+  const plan={fresh:!!fresh,errors:[],warns:[],newRiders:[],catChanges:[],leagueMoves:[],natMoves:[],newTeams:[],newSeries:[],seriesAdds:0,seriesAddList:[],ops:[],rows:0,same:0};
   if(table.length<2){plan.errors.push("Plik nie zawiera danych (potrzebny nagłówek i co najmniej jeden wiersz).");return plan;}
   if(table.length-1>BD_MAX_ROWS){plan.errors.push("Zbyt wiele wierszy (limit "+BD_MAX_ROWS+").");return plan;}
   const head=table[0].map(bdKey);
@@ -4372,13 +4374,13 @@ function bdPlan(table){
   const cNat=idx("druzynanarodowa","kadra","reprezentacja","narodowa");
   const cSer=head.map((h,i)=>/^(rozgrywki\d*|serie|seria)$/.test(h)?i:-1).filter(i=>i>=0);
   if((cFirst<0||cLast<0)&&cFull<0){plan.errors.push("Brak kolumn „Imię” i „Nazwisko” w nagłówku.");return plan;}
-  const known=new Map();S.riders.forEach(n=>known.set(bdKey(n),n));
+  const known=new Map();B.riders.forEach(n=>known.set(bdKey(n),n));
   const leagueTeams=new Map(),natTeams=new Map();
-  S.teams.forEach(t=>{(teamIsNat(t)?natTeams:leagueTeams).set(bdKey(t.name),t.name);});
-  const rosterKeys=new Map();Object.keys(S.rosters).forEach(k=>rosterKeys.set(bdKey(k),k));
+  B.teams.forEach(t=>{(teamIsNat(t)?natTeams:leagueTeams).set(bdKey(t.name),t.name);});
+  const rosterKeys=new Map();Object.keys(B.rosters).forEach(k=>rosterKeys.set(bdKey(k),k));
   const seen=new Map(); /* klucz zawodnika → dane z wiersza (późniejszy wiersz uzupełnia/nadpisuje) */
   for(let r=1;r<table.length;r++){
-    const row=table[r],line=r+1,get=i=>i<0?"":cleanText(row[i]||"",100);
+    const row=table[r],line=r+1,get=i=>i<0?"":cleanText(String(row[i]||"").replace(/^'(?=[=+\-@])/,""),100);
     let first=get(cFirst),last=get(cLast);
     if(cFull>=0&&(!first||!last)){const sp=bdSplitName(get(cFull));first=first||sp.first;last=last||sp.last;}
     if(!first||!last){plan.warns.push("Wiersz "+line+": brak imienia lub nazwiska — pominięty.");continue;}
@@ -4398,7 +4400,8 @@ function bdPlan(table){
     seen.set(k,{name,key:k,jr,lg:(lg&&!bdIsNone(lg))?lg:"",nt:(nt&&!bdIsNone(nt))?nt:"",series,line});
   }
   plan.rows=seen.size;
-  let nRiders=S.riders.length;const newTeamNames={l:new Set(),n:new Set()},newSer=new Set();
+  if(fresh&&!seen.size){plan.errors.push("Plik nie zawiera żadnego poprawnego zawodnika — baza nie zostanie zastąpiona.");return plan;}
+  let nRiders=B.riders.length;const newTeamNames={l:new Set(),n:new Set()},newSer=new Set();
   seen.forEach(d=>{
     const existing=known.get(d.key);
     const name=existing||d.name;
@@ -4407,18 +4410,18 @@ function bdPlan(table){
     else if(existing!==d.name&&bdKey(existing)===d.key&&existing.toLowerCase()!==d.name.toLowerCase())plan.warns.push("„"+d.name+"” dopasowano do istniejącego zawodnika „"+existing+"”.");
     let changed=isNew;
     const op={name,isNew,jr:d.jr,lg:null,nt:null,series:[]};
-    const curJr=(S.juniors||[]).includes(name);
+    const curJr=(B.juniors||[]).includes(name);
     if(d.jr!==null&&(isNew||d.jr!==curJr)){op.jr=d.jr;if(!isNew){plan.catChanges.push(name+": "+(curJr?"J":"S")+" → "+(d.jr?"J":"S"));changed=true;}}
     if(d.lg){
       const tk=bdKey(d.lg);let tName=leagueTeams.get(tk);
       if(!tName){tName=d.lg;if(!newTeamNames.l.has(tk)){newTeamNames.l.add(tk);plan.newTeams.push(tName+" (ligowa)");}leagueTeams.set(tk,tName);}
-      const curT=S.teams.find(t=>!teamIsNat(t)&&t.riders.includes(name));
+      const curT=B.teams.find(t=>!teamIsNat(t)&&t.riders.includes(name));
       if(!curT||curT.name!==tName){op.lg=tName;if(curT)plan.leagueMoves.push(name+": "+curT.name+" → "+tName);changed=true;}
     }
     if(d.nt){
       const tk=bdKey(d.nt);let tName=natTeams.get(tk);
       if(!tName){tName=d.nt;if(!newTeamNames.n.has(tk)){newTeamNames.n.add(tk);plan.newTeams.push(tName+" (narodowa)");}natTeams.set(tk,tName);}
-      const curT=S.teams.find(t=>teamIsNat(t)&&t.riders.includes(name));
+      const curT=B.teams.find(t=>teamIsNat(t)&&t.riders.includes(name));
       if(!curT||curT.name!==tName){op.nt=tName;if(curT)plan.natMoves.push(name+": "+curT.name+" → "+tName);changed=true;}
     }
     d.series.forEach(sr=>{
@@ -4427,16 +4430,17 @@ function bdPlan(table){
         if(sr.length>10||/[^A-Z0-9ĄĆĘŁŃÓŚŹŻ_-]/.test(sr)){plan.warns.push(name+": nieprawidłowa nazwa serii „"+sr+"” — pominięta.");return;}
         key=sr;rosterKeys.set(sk,key);newSer.add(key);plan.newSeries.push(key);
       }
-      if(!(S.rosters[key]||[]).includes(name)&&!op.series.includes(key)){op.series.push(key);plan.seriesAdds++;plan.seriesAddList.push(name+" → "+key);changed=true;}
+      if(!(B.rosters[key]||[]).includes(name)&&!op.series.includes(key)){op.series.push(key);plan.seriesAdds++;plan.seriesAddList.push(name+" → "+key);changed=true;}
     });
     if(changed)plan.ops.push(op);else plan.same++;
   });
-  if(nRiders>IMPORT_LIMITS.riders)plan.errors.push("Po imporcie baza miałaby "+nRiders+" zawodników (limit "+IMPORT_LIMITS.riders+").");
-  if(S.teams.length+plan.newTeams.length>200)plan.errors.push("Zbyt wiele drużyn po imporcie (limit 200).");
+  if(nRiders>IMPORT_LIMITS.riders)plan.errors.push("Po imporcie baza miałaby "+nRiders+" zawodników (limit "+IMPORT_LIMITB.riders+").");
+  if(B.teams.length+plan.newTeams.length>200)plan.errors.push("Zbyt wiele drużyn po imporcie (limit 200).");
   return plan;
 }
 function bdApply(plan){
-  mutate(()=>{
+  return mutate(()=>{
+    if(plan.fresh){S.riders=[];S.juniors=[];S.teams=[];Object.keys(S.rosters).forEach(k=>{S.rosters[k]=[];});}
     plan.ops.forEach(op=>{
       if(!S.riders.includes(op.name))S.riders.push(op.name);
       if(op.jr!==null)lgSetJuniorFlag(op.name,op.jr);
@@ -4465,22 +4469,54 @@ function bdDecode(buf){
 }
 /* Skrót zawartości pliku (do wykrywania nowej wersji bazy). */
 function bdHash(buf){let h=2166136261;const u=new Uint8Array(buf);for(let i=0;i<u.length;i++){h^=u[i];h=Math.imul(h,16777619)>>>0;}return h.toString(36)+"-"+u.length;}
-function bdPreview(buf,title,silent,hash){
+/* Kopia bazy (zawodnicy, drużyny, składy serii) — do cofnięcia importu i czyszczenia. Zawody nie są częścią bazy. */
+function bdSnap(){return JSON.stringify({riders:S.riders,juniors:S.juniors||[],teams:S.teams,rosters:S.rosters,applied:S.settings.starterApplied||null});}
+function bdRestore(snap){
+  const d=JSON.parse(snap);
+  if(mutate(()=>{S.riders=d.riders;S.juniors=d.juniors;S.teams=d.teams;S.rosters=d.rosters;if(d.applied)S.settings.starterApplied=d.applied;else delete S.settings.starterApplied;})){
+    LgW=null;PmW=null;QdW=null;renderSaved();try{renderRiderLib();}catch(e){}UI.toast("↩ Przywrócono poprzednią bazę.");
+  }
+}
+function bdWipe(){S.riders=[];S.juniors=[];S.teams=[];Object.keys(S.rosters).forEach(k=>{S.rosters[k]=[];});}
+function bdPreview(buf,title,silent,hash,fresh){
   const text=bdDecode(buf);
   if(text===null){if(!silent)UI.toast("❌ Nie udało się odczytać pliku.");return;}
-  const plan=bdPlan(bdParseTable(text));
+  const table=bdParseTable(text);
+  const plan=bdPlan(table,fresh);
   if(plan.errors.length){if(!silent)UI.openModal("<h3>"+escq(title)+"</h3><p style='text-align:center;color:var(--danger-fg)'>"+plan.errors.map(escq).join("<br>")+"</p><button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");return;}
   if(!plan.ops.length){if(hash&&S.settings.starterApplied!==hash)mutate(()=>{S.settings.starterApplied=hash;});if(!silent)UI.openModal("<h3>"+escq(title)+"</h3><p style='text-align:center'>Brak zmian — wszyscy zawodnicy z pliku ("+plan.rows+") są już w bazie z tymi samymi przypisaniami.</p>"+(plan.warns.length?bdList("Uwagi",plan.warns,10):"")+"<button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");return;}
-  let html="<h3>"+escq(title)+" — podgląd</h3><p style='text-align:center;font-size:0.85rem;margin:0'>Wierszy w pliku: <b>"+plan.rows+"</b>. Do zmiany: <b>"+plan.ops.length+"</b>"+(plan.same?" · bez zmian: "+plan.same:"")+"</p>"+
-    "<div style='max-height:55vh;overflow:auto;margin:8px 0'>"+
+  const nComps=Object.keys(S.comps||{}).length;
+  const modeBtn=(id,label,on)=>"<button class='btn"+(on?" primary":"")+"' id='"+id+"' style='flex:1;margin:0'>"+label+"</button>";
+  let html="<h3>"+escq(title)+" — podgląd</h3>"+
+    (silent?"":"<div style='display:flex;gap:6px;margin-bottom:8px'>"+modeBtn("bdmMerge","Scal z moją bazą",!fresh)+modeBtn("bdmFresh","Zastąp (od zera)",!!fresh)+"</div>")+
+    "<p style='text-align:center;font-size:0.85rem;margin:0'>Wierszy w pliku: <b>"+plan.rows+"</b>. "+(fresh?"Nowa baza: <b>"+plan.ops.length+"</b> zawodników":"Do zmiany: <b>"+plan.ops.length+"</b>"+(plan.same?" · bez zmian: "+plan.same:""))+"</p>"+
+    (fresh?"<p style='text-align:center;font-size:0.85rem;margin:6px 0 0;color:var(--danger-fg)'>Obecna baza zostanie usunięta: <b>"+S.riders.length+"</b> zawodników, <b>"+S.teams.length+"</b> drużyn.</p>":"")+
+    "<div style='max-height:50vh;overflow:auto;margin:8px 0'>"+
     bdList("Nowi zawodnicy",plan.newRiders)+bdList("Nowe drużyny",plan.newTeams)+bdList("Nowe serie rozgrywek",plan.newSeries)+
-    bdList("Zmiana klubu",plan.leagueMoves)+bdList("Zmiana drużyny narodowej",plan.natMoves)+bdList("Zmiana kategorii J/S",plan.catChanges)+
-    bdList("Dopisani do serii",plan.seriesAddList)+bdList("Uwagi",plan.warns,10)+"</div>"+
-    "<p style='font-size:0.72rem;color:var(--text-muted);text-align:center;margin:0 0 10px'>Import tylko dopisuje i zmienia przypisania — nic nie jest usuwane, a zapisane zawody zostają bez zmian.</p>"+
-    "<button class='btn primary' id='bdok'>Importuj</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>";
+    (fresh?"":bdList("Zmiana klubu",plan.leagueMoves)+bdList("Zmiana drużyny narodowej",plan.natMoves)+bdList("Zmiana kategorii J/S",plan.catChanges)+bdList("Dopisani do serii",plan.seriesAddList))+
+    bdList("Uwagi",plan.warns,10)+"</div>"+
+    "<p style='font-size:0.72rem;color:var(--text-muted);text-align:center;margin:0 0 10px'>"+(fresh?"Zapisane zawody ("+nComps+") zostają bez zmian — mają własne składy. Po imporcie będzie można cofnąć.":"Import tylko dopisuje i zmienia przypisania — nic nie jest usuwane, a zapisane zawody zostają bez zmian.")+"</p>"+
+    "<button class='btn "+(fresh?"danger":"primary")+"' id='bdok'>"+(fresh?"Zastąp bazę":"Importuj")+"</button><button class='btn' data-onclick='UI.closeModal()'>Anuluj</button>";
   UI.openModal(html);
-  $("bdok").onclick=()=>{bdApply(plan);if(hash)mutate(()=>{S.settings.starterApplied=hash;});UI.closeModal();UI.toast("✔ Zaimportowano: "+plan.ops.length+" zawodników.");renderSaved();try{renderRiderLib();}catch(e){}};
+  if(!silent){$("bdmMerge").onclick=()=>bdPreview(buf,title,silent,hash,false);$("bdmFresh").onclick=()=>bdPreview(buf,title,silent,hash,true);}
+  $("bdok").onclick=()=>{
+    const snap=bdSnap();
+    if(!bdApply(plan))return;
+    if(plan.fresh){LgW=null;PmW=null;QdW=null;}
+    if(hash)mutate(()=>{S.settings.starterApplied=hash;});
+    UI.closeModal();renderSaved();try{renderRiderLib();}catch(e){}
+    rtShow((plan.fresh?"Baza zastąpiona: ":"Zaimportowano: ")+plan.ops.length+" zawodników",()=>bdRestore(snap));
+  };
 }
+UI.baseClear=function(){
+  if(!S.riders.length&&!S.teams.length){UI.toast("Baza jest już pusta.");return;}
+  UI.confirm("Wyczyścić bazę zawodników?<br><small style='color:var(--text-muted)'>Usunięte zostaną zawodnicy ("+S.riders.length+"), drużyny ("+S.teams.length+") i składy serii. Zapisane zawody zostają bez zmian. Można cofnąć.</small>",()=>{
+    const snap=bdSnap();
+    if(!mutate(bdWipe))return;
+    LgW=null;PmW=null;QdW=null;renderSaved();try{renderRiderLib();}catch(e){}
+    rtShow("Baza wyczyszczona",()=>bdRestore(snap));
+  });
+};
 UI.baseImport=function(inp){
   const f=inp.files[0];if(!f)return;
   if(f.size>IMPORT_LIMITS.bytes){UI.toast("❌ Plik jest zbyt duży (limit 5 MB).");inp.value="";return;}
@@ -4490,11 +4526,11 @@ UI.baseImport=function(inp){
 };
 /* Baza zawodników dołączona do aplikacji (plik baza-startowa.csv w repozytorium, ten sam format co import z arkusza). */
 function bdFetchStarter(){
-  return fetch("baza-startowa.csv",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error("http");return r.arrayBuffer();});
+  return fetch("baza-startowa.csv",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.arrayBuffer();});
 }
 UI.baseLoadStarter=function(){
   bdFetchStarter().then(buf=>bdPreview(buf,"Baza zawodników",false,bdHash(buf)))
-    .catch(()=>{UI.toast("❌ Nie udało się pobrać bazy (sprawdź połączenie).");});
+    .catch(e=>{const m=/^http (\d+)/.exec(String(e&&e.message));UI.toast(m?"❌ Nie udało się pobrać bazy (serwer odpowiedział błędem "+m[1]+").":"❌ Nie udało się pobrać bazy (sprawdź połączenie).");});
 };
 function bdBanner(buf,hash){
   const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
@@ -4523,7 +4559,9 @@ function bdCheckStarter(){
     bdBanner(buf,hash);
   }).catch(()=>{});
 }
-function bdCsvCell(v){v=String(v==null?"":v);return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+/* Ochrona przed wstrzyknięciem formuły w arkuszu: komórka zaczynająca się od = + - @ (lub tabulatora/CR) dostaje prefiks apostrofu;
+   przy imporcie bdPlan zdejmuje go z powrotem (bdUnformula). */
+function bdCsvCell(v){v=String(v==null?"":v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function bdDownload(name,rows){
   const txt="﻿"+rows.map(r=>r.map(bdCsvCell).join(";")).join("\r\n")+"\r\n";
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));
@@ -4563,7 +4601,9 @@ UI.baseExportSheet=function(){
 /* ===================== TOAST Z WYNIKIEM BIEGU (z opcją „Cofnij”) ===================== */
 /* Pokazuje się po zatwierdzeniu biegu w każdych rozgrywkach: 5 s, na środku ekranu, nowy zastępuje stary. */
 let RtTimer=null;
-function rtShow(text,undo){
+/* spec: tekst albo {title, rows:[[nazwa, punkty, suma|""],…]} — wiersze trafiają do trzech kolumn (nazwa · punkty · suma w nawiasie). */
+function rtShow(spec,undo){
+  if(typeof spec==="string")spec={title:spec,rows:[]};
   const old=document.getElementById("rtoast");if(old)old.remove();
   clearTimeout(RtTimer);
   /* Przezroczyste tło łapie stuknięcie poza kartą: działa jak OK i nie przepuszcza dotyku do ekranu pod spodem. */
@@ -4571,7 +4611,18 @@ function rtShow(text,undo){
   const close=()=>{clearTimeout(RtTimer);wrap.remove();};
   wrap.addEventListener("click",ev=>{if(ev.target===wrap)close();});
   const el=document.createElement("div");el.className="rtoast";el.setAttribute("role","status");
-  const sp=document.createElement("span");sp.textContent=text;el.appendChild(sp);
+  if(spec.title){const sp=document.createElement("div");sp.className="rt-title";sp.textContent=spec.title;el.appendChild(sp);}
+  if(spec.rows&&spec.rows.length){
+    const tb=document.createElement("div");tb.className="rt-rows";
+    spec.rows.forEach(r=>{
+      const row=document.createElement("div");row.className="rt-row";
+      [[r[0],"rt-n"],[r[1],"rt-p"],[r[2]===""||r[2]==null?"":"("+r[2]+")","rt-t"]].forEach(c=>{
+        const sp=document.createElement("span");sp.className=c[1];sp.textContent=String(c[0]);row.appendChild(sp);
+      });
+      tb.appendChild(row);
+    });
+    el.appendChild(tb);
+  }
   const row=document.createElement("div");row.className="rt-btns";
   if(undo){
     const b=document.createElement("button");b.type="button";b.className="rt-undo";b.textContent="COFNIJ";
@@ -4597,9 +4648,9 @@ function rtLeague(m,c,idx){
   const undo=()=>{UI.lgEditHeat(idx);rtScroll("lgheat-"+h.n);};
   if(m.heats.every(x=>x.confirmed)){
     const w=t.home>t.away?c.home.name+" "+t.home+":"+t.away:(t.away>t.home?c.away.name+" "+t.away+":"+t.home:"Remis "+t.home+":"+t.away);
-    rtShow("Koniec zawodów · "+(t.home===t.away?w:"wygrywa "+w),undo);return;
+    rtShow({title:"Koniec zawodów · "+(t.home===t.away?w:"wygrywa "+w),rows:[[c.home.name,h.score.home,t.home],[c.away.name,h.score.away,t.away]]},undo);return;
   }
-  rtShow(c.home.name+"-"+c.away.name+" "+h.score.home+":"+h.score.away+" ("+t.home+":"+t.away+")",undo);
+  rtShow({rows:[[c.home.name,h.score.home,t.home],[c.away.name,h.score.away,t.away]]},undo);
 }
 function rtPairs(c,hi){
   const h=c.pm.heats[hi],tb=pmTable(c),P=t=>(tb.find(r=>r.t===t)||{pts:0}).pts;
@@ -4607,11 +4658,11 @@ function rtPairs(c,hi){
   const undo=()=>{UI.pmEditHeat(hi);rtScroll("pmheat-"+h.n);};
   if(pmFirstOpen(c)<0){
     const w=pmHeatWinner(c,h);
-    rtShow("Koniec zawodów · "+(w==null?"remis":"wygrywa "+n(w))+" ("+n(h.a)+" "+h.score.a+":"+h.score.b+" "+n(h.b)+")",undo);return;
+    rtShow({title:"Koniec zawodów · "+(w==null?"remis":"wygrywa "+n(w)),rows:[[n(h.a),h.score.a,""],[n(h.b),h.score.b,""]]},undo);return;
   }
   /* Sumy punktów tylko w biegach zasadniczych — w półfinałach i finale wyświetlamy sam wynik biegu. */
   const regular=!h.extra&&h.n<=pmRR(c);
-  rtShow(n(h.a)+"-"+n(h.b)+" "+h.score.a+":"+h.score.b+(regular?" ("+P(h.a)+":"+P(h.b)+")":""),undo);
+  rtShow({rows:[[n(h.a),h.score.a,regular?P(h.a):""],[n(h.b),h.score.b,regular?P(h.b):""]]},undo);
 }
 function rtQuad(c,hi){
   const h=c.qd.heats[hi],tb=qdTable(c);
@@ -4620,8 +4671,7 @@ function rtQuad(c,hi){
     if(qdEq(tb[0],tb[1])){rtShow("Remis o 1. miejsce — bieg dodatkowy",undo);return;}
     rtShow("Koniec zawodów · wygrywa "+c.qd.teams[tb[0].t].name+" ("+tb[0].pts+" pkt)",undo);return;
   }
-  const parts=h.order.map(si=>{const t=h.slots[si].t,sc=h.score.pts[t];return c.qd.teams[t].name+" "+sc+" ("+tb.find(r=>r.t===t).pts+")";});
-  rtShow(parts.join(", "),undo);
+  rtShow({rows:h.order.map(si=>{const t=h.slots[si].t,sc=h.score.pts[t];return [c.qd.teams[t].name,sc,tb.find(r=>r.t===t).pts];})},undo);
 }
 function rtIndividual(c,h){
   const st=standings(c),res=heatResults(h),all=Object.values(c.mapping).filter(Boolean);
@@ -4633,8 +4683,7 @@ function rtIndividual(c,h){
   }
   const fin=heatFinishOrder(h)||[];
   const marked=Object.keys(res).map(Number).filter(k=>res[k].mark&&!fin.includes(k));
-  const parts=[...fin,...marked].map(num=>nm(num)+" "+(res[num].mark?res[num].mark:res[num].pts)+(st[num]?" ("+st[num].pts+")":""));
-  rtShow(parts.join(", "),undo);
+  rtShow({rows:[...fin,...marked].map(num=>[nm(num),res[num].mark?res[num].mark:res[num].pts,st[num]?st[num].pts:""])},undo);
 }
 
 /* Globalna obsługa nieoczekiwanych błędów — tylko komunikat; nic nie opuszcza urządzenia. */

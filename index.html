@@ -14,7 +14,7 @@
 <!-- Ikonka i tryb pe&#322;noekranowy dzia&#322;aj&#261; od razu, nawet otwarte jako pojedynczy plik.
      Pe&#322;ny przycisk "Zainstaluj aplikacj&#281;" na Androidzie wymaga jednak hostowania
      przez HTTPS wraz z plikami manifest.json i sw.js (patrz README-PWA.txt). -->
-<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0b0f19">
@@ -78,6 +78,7 @@
     <button class="btn" data-onclick="UI.pickBaseImport()">Importuj zawodnik&#243;w z arkusza</button>
     <button class="btn" data-onclick="UI.baseTemplate()">Pobierz wz&#243;r pliku (CSV)</button>
     <button class="btn" data-onclick="UI.baseExportSheet()">Eksportuj baz&#281; do arkusza (CSV)</button>
+    <button class="btn danger" data-onclick="UI.baseClear()">Wyczy&#347;&#263; baz&#281; zawodnik&#243;w</button>
     <input type="file" id="bdFile" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values" style="display:none" data-onchange="UI.baseImport(this)">
   </div>
 

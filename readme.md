@@ -25,13 +25,13 @@ Aplikacja internetowa typu PWA (Progressive Web App) do śledzenia, prowadzenia 
 
 **Baza zawodników i drużyn**
 - Wspólna baza zawodników (senior / junior), drużyny ligowe i narodowe oraz listy serii indywidualnych.
-- **Import z arkusza (CSV/TSV/TXT):** kolumny Imię · Nazwisko · J/S · Drużyna ligowa · Drużyna narodowa · Rozgrywki; podgląd zmian przed zapisem, wzór pliku i eksport bazy do arkusza.
-- **Baza startowa:** plik `baza-startowa.csv` w repozytorium; aplikacja informuje o nowej wersji bazy i pozwala ją zaimportować (import tylko dopisuje i zmienia przypisania, nie rusza zapisanych zawodów).
+- **Import z arkusza (CSV/TSV/TXT):** kolumny Imię · Nazwisko · J/S · Drużyna ligowa · Drużyna narodowa · Rozgrywki; podgląd zmian przed zapisem, wzór pliku i eksport bazy do arkusza. Dwa tryby: **Scal z moją bazą** (dopisuje i zmienia przypisania) oraz **Zastąp (od zera)** (usuwa obecną bazę i wczytuje plik, np. na nowy sezon). Jest też przycisk „Wyczyść bazę zawodników”; import i czyszczenie można cofnąć.
+- **Baza startowa:** plik `baza-startowa.csv` w repozytorium; aplikacja informuje o nowej wersji bazy i pozwala ją zaimportować (scalając lub zastępując bazę); zapisane zawody nigdy nie są zmieniane.
 
 **Aplikacja**
 - **PWA:** instalacja na telefonie lub komputerze, działa offline; powiadomienie o nowej wersji aplikacji.
 - **Kopia zapasowa:** eksport i przywracanie danych (JSON), z historią zawodów lub bez; przypomnienie o kopii.
-- **Dane lokalne:** wszystko zapisuje się na urządzeniu (IndexedDB), bez kont i serwera; aplikacja łączy się wyłącznie z własnym adresem (poza tym tylko plik bazy z repozytorium).
+- **Dane lokalne:** wszystko zapisuje się na urządzeniu (localStorage przeglądarki), bez kont i serwera; aplikacja łączy się wyłącznie z własnym adresem (poza tym tylko plik bazy z repozytorium).
 - **Responsywny interfejs** dla telefonów i ekranów desktopowych.
 
 ## 🛠️ Technologie
@@ -79,13 +79,13 @@ A Progressive Web App (PWA) for managing, tracking, and scoring speedway matches
 
 **Rider and team database**
 - Shared rider database (senior / junior), league and national teams, and individual-series lists.
-- **Spreadsheet import (CSV/TSV/TXT):** columns First name · Last name · J/S · League team · National team · Series; preview before saving, a template file and export to a spreadsheet.
-- **Starter database:** `baza-startowa.csv` in the repository; the app announces a new version of the database and lets you import it (import only adds and reassigns, saved events are untouched).
+- **Spreadsheet import (CSV/TSV/TXT):** columns First name · Last name · J/S · League team · National team · Series; preview before saving, a template file and export to a spreadsheet. Two modes: **Merge with my database** (adds and reassigns) and **Replace (from scratch)** (removes the current database and loads the file, e.g. for a new season). There is also a “Clear rider database” button; import and clearing can be undone.
+- **Starter database:** `baza-startowa.csv` in the repository; the app announces a new version of the database and lets you import it (merge or replace); saved events are never changed.
 
 **App**
 - **PWA:** installable on phones and desktops, works offline; notification about a new app version.
 - **Backup:** data export and restore (JSON), with or without event history; backup reminder.
-- **Local data:** everything is stored on the device (IndexedDB), no accounts or server; the app connects only to its own origin (the starter database file).
+- **Local data:** everything is stored on the device (browser localStorage), no accounts or server; the app connects only to its own origin (the starter database file).
 - **Responsive UI** for phones, tablets and desktops.
 
 ## 🛠️ Tech Stack
