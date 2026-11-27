@@ -354,7 +354,7 @@ function placeLabel(c,num,groups){
 const $=id=>document.getElementById(id);
 /* Przełącznik kategorii J/S w oknach „Dodaj zawodnika” — kategoria od razu
    trafia do S.juniors, dzięki czemu nowego zawodnika można od razu przypisać
-   do drużyny (6-7 / 14-15 to miejsca juniorów) i do serii indywidualnych. */
+   do drużyny (6-8 / 14-16 to miejsca juniorów) i do serii indywidualnych. */
 function lgCatToggleHtml(){
   return "<div style='display:flex;gap:8px;margin-bottom:12px'>"+
     "<button class='btn small primary' style='flex:1' id='catS'>Senior (S)</button>"+
@@ -1844,8 +1844,8 @@ function renderLgLineup(){
   let html="";
   nums.forEach(n=>{
     const cur=side.lineup[n];
-    const juniorOnly=(LgLineupStep==="home"&&(n===14||n===15))||(LgLineupStep==="away"&&(n===6||n===7));
-    /* Wybrani zawodnicy znikają z list; 6-7 / 14-15 — tylko juniorzy. */
+    const juniorOnly=(LgLineupStep==="home"&&(n===14||n===15||n===16))||(LgLineupStep==="away"&&(n===6||n===7||n===8));
+    /* Wybrani zawodnicy znikają z list; 6-8 / 14-16 — tylko juniorzy. */
     const pool=all.filter(name=>{
       if(name===cur)return true;
       if(Object.values(side.lineup).includes(name))return false;
@@ -1873,8 +1873,8 @@ UI.lgSetLineup=function(num,val){
   /* Każdy zawodnik (także Zawodnik zastępowany) tylko raz w składzie. */
   const dup=Object.keys(side.lineup).some(k=>+k!==num&&side.lineup[k]===name);
   if(dup){UI.toast("❌ Ten zawodnik jest już w składzie pod innym numerem.");renderLgLineup();return;}
-  /* 6-7 (goście) i 14-15 (gospodarze) — wyłącznie juniorzy. */
-  const juniorOnly=(LgLineupStep==="home"&&(num===14||num===15))||(LgLineupStep==="away"&&(num===6||num===7));
+  /* 6-8 (goście) i 14-16 (gospodarze) — wyłącznie juniorzy. */
+  const juniorOnly=(LgLineupStep==="home"&&(num===14||num===15||num===16))||(LgLineupStep==="away"&&(num===6||num===7||num===8));
   if(juniorOnly&&!(S.juniors||[]).includes(name)){UI.toast("❌ Pod numer "+num+" można wpisać wyłącznie juniora.");renderLgLineup();return;}
   side.lineup[num]=name;
   renderLgLineup();
@@ -1892,8 +1892,8 @@ UI.lgLineupNext=function(){
     return;
   }
   if(!LgW.away.lineup[1]){UI.toast("Przypisz zawodnika nr 1.");return;}
-  /* Walidacja: 6-7 / 14-15 tylko juniorzy (jeśli obsadzone). */
-  const badJr=[["home",14],["home",15],["away",6],["away",7]].find(([tk,n])=>{
+  /* Walidacja: 6-8 / 14-16 tylko juniorzy (jeśli obsadzone). */
+  const badJr=[["home",14],["home",15],["home",16],["away",6],["away",7],["away",8]].find(([tk,n])=>{
     const nm=LgW[tk].lineup[n];
     return nm&&!(S.juniors||[]).includes(nm);
   });
@@ -2063,7 +2063,7 @@ function lgRiderTotals(teamKey,upto){
   return totals;
 }
 /* Zastępstwa (cały mecz, biegi 1-15): RZ — rezerwa zwykła: za pozycje
-   seniorskie 1-5 / 9-13 mogą wjechać rezerwowi 6-7 / 14-15 oraz 8 / 16;
+   seniorskie 1-5 / 9-13 mogą wjechać rezerwowi 6-7 / 14-15 oraz 8 / 16 (wyłącznie juniorzy: 6-8 / 14-16);
    rezerwowy 8 / 16 jako junior (J) może dodatkowo zastąpić pozycje juniorskie
    6-7 / 14-15 (w RZ i RT). Junior wystawiony na pozycji seniorskiej jest traktowany
    jak senior (również w RT: nie ogranicza zastępującego do juniorów).
