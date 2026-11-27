@@ -1,0 +1,10 @@
+const {run}=require('./harness.js');const assert=require('assert');
+const J=c=>JSON.parse(run(`JSON.stringify(${c})`));
+assert.equal(J(`bdCsvCell('=HYPERLINK("x")')`),`"'=HYPERLINK(""x"")"`);
+assert.equal(J(`bdCsvCell('+48')`),"'+48");
+assert.equal(J(`bdCsvCell('Jan')`),'Jan');
+assert.equal(J(`bdCsvCell('a-b')`),'a-b');
+run(`S.riders=[];S.juniors=[];S.teams=[];S.rosters={SGP:[],SEC:[],IMP:[],INNE:[]};`);
+const P=J(`bdPlan(bdParseTable("Imię;Nazwisko;Drużyna ligowa\\r\\n'=Jan;Kowalski;'@Klub\\r\\n"))`);
+assert.deepEqual(P.newRiders,['Jan Kowalski'].map(x=>x).length?P.newRiders:[]);
+console.log(P.newRiders,P.newTeams);

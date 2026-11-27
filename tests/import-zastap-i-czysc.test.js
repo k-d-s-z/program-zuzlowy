@@ -1,0 +1,31 @@
+const {run}=require('./harness.js');
+const assert=require('assert');
+const J=c=>JSON.parse(run(`JSON.stringify(${c})`));
+run(`S.riders=['Stary Zawodnik','Maciej Janowski'];S.juniors=['Stary Zawodnik'];S.rosters={SGP:['Stary Zawodnik'],SEC:[],IMP:[],INNE:[],MOJA:['Maciej Janowski']};
+S.teams=[{name:'Stary Klub',riders:[LG_ZZ_NAME,'Stary Zawodnik']},{name:'Sparta Wrocław',riders:[LG_ZZ_NAME,'Maciej Janowski']}];
+S.comps={c1:{id:'c1',type:'x'}};`);
+const csv="Imię;Nazwisko;J/S;Drużyna ligowa;Drużyna narodowa;Rozgrywki\r\nMaciej;Janowski;S;Unia Leszno;Polska;IMP\r\nJan;Kowalski;J;Unia Leszno;brak;brak\r\n";
+run(`globalThis.PF=bdPlan(bdParseTable(${JSON.stringify(csv)}),true);globalThis.PM=bdPlan(bdParseTable(${JSON.stringify(csv)}),false);`);
+const PF=J('PF'),PM=J('PM');
+assert.equal(PF.errors.length,0);assert.equal(PF.fresh,true);
+assert.equal(PF.newRiders.length,2,'fresh: wszyscy nowi');
+assert.equal(PM.newRiders.length,1);
+run(`globalThis.SNAP=bdSnap();bdApply(PF)`);
+assert.deepEqual(J('S.riders').sort(),['Jan Kowalski','Maciej Janowski']);
+assert.deepEqual(J('S.juniors'),['Jan Kowalski']);
+assert.deepEqual(J('S.teams.map(t=>t.name).sort()'),['Polska','Unia Leszno']);
+assert.deepEqual(J('S.rosters.IMP'),['Maciej Janowski']);
+assert.deepEqual(J('S.rosters.SGP'),[]);
+assert.deepEqual(J('S.rosters.MOJA'),[],'seria własna zachowana, ale pusta');
+assert.deepEqual(J('Object.keys(S.comps)'),['c1'],'zawody nietknięte');
+run('bdRestore(SNAP)');
+assert.deepEqual(J('S.riders.sort()'),['Maciej Janowski','Stary Zawodnik']);
+assert.deepEqual(J('S.teams.length'),2);
+assert.deepEqual(J('S.rosters.MOJA'),['Maciej Janowski']);
+// pusty plik nie kasuje bazy
+run(`globalThis.PE=bdPlan(bdParseTable('Imię;Nazwisko\\r\\n;\\r\\n'),true)`);
+assert.equal(J('PE.errors.length'),1);
+// czyszczenie
+run('mutate(bdWipe)');
+assert.equal(J('S.riders.length'),0);assert.equal(J('S.teams.length'),0);assert.deepEqual(J('S.rosters.MOJA'),[]);
+console.log('replace/clear ok');

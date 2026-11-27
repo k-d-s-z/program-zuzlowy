@@ -1611,7 +1611,7 @@ if("serviceWorker" in navigator){
     const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
     b.innerHTML="<span>Dostępna nowa wersja aplikacji</span><button type='button' class='upd-go'>ODŚWIEŻ</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
     b.querySelector(".upd-go").addEventListener("click",()=>location.reload());
-    b.querySelector(".upd-x").addEventListener("click",()=>{b.remove();mutate(()=>{S.settings.starterSeen=hash;});});
+    b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
     document.body.appendChild(b);
   });
 }
@@ -4434,7 +4434,7 @@ function bdPlan(table,fresh){
     });
     if(changed)plan.ops.push(op);else plan.same++;
   });
-  if(nRiders>IMPORT_LIMITS.riders)plan.errors.push("Po imporcie baza miałaby "+nRiders+" zawodników (limit "+IMPORT_LIMITB.riders+").");
+  if(nRiders>IMPORT_LIMITS.riders)plan.errors.push("Po imporcie baza miałaby "+nRiders+" zawodników (limit "+IMPORT_LIMITS.riders+").");
   if(B.teams.length+plan.newTeams.length>200)plan.errors.push("Zbyt wiele drużyn po imporcie (limit 200).");
   return plan;
 }
@@ -4539,7 +4539,7 @@ function bdBanner(buf,hash){
   if(document.querySelector(".upd-banner"))b.style.top="calc(66px + env(safe-area-inset-top, 0px))";
   b.innerHTML="<span>Dostępna nowa baza zawodników</span><button type='button' class='upd-go'>IMPORTUJ</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
   b.querySelector(".upd-go").addEventListener("click",()=>{b.remove();bdPreview(buf,"Baza zawodników",false,hash);});
-  b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
+  b.querySelector(".upd-x").addEventListener("click",()=>{b.remove();mutate(()=>{S.settings.starterSeen=hash;});});
   document.body.appendChild(b);
 }
 /* Sprawdza, czy baza z repozytorium jest nowsza niż ostatnio zaimportowana lub już pokazana.

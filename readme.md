@@ -110,3 +110,9 @@ A Progressive Web App (PWA) for managing, tracking, and scoring speedway matches
 ## 📄 License
 
 Distributed under the MIT License.
+
+---
+
+**Testy / Tests**
+
+`node tests/run.js` — testy bez zależności (Node 18+): import bazy, tryby scal/zastąp, CSV, toasty wyników, pary, czwórmecz. Uruchamiają się też automatycznie na GitHubie (`.github/workflows/test.yml`).
