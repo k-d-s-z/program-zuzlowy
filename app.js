@@ -1611,7 +1611,7 @@ if("serviceWorker" in navigator){
     const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
     b.innerHTML="<span>Dostępna nowa wersja aplikacji</span><button type='button' class='upd-go'>ODŚWIEŻ</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
     b.querySelector(".upd-go").addEventListener("click",()=>location.reload());
-    b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
+    b.querySelector(".upd-x").addEventListener("click",()=>{b.remove();mutate(()=>{S.settings.starterSeen=hash;});});
     document.body.appendChild(b);
   });
 }
@@ -4534,6 +4534,8 @@ UI.baseLoadStarter=function(){
 };
 function bdBanner(buf,hash){
   const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
+  if(document.querySelector(".bd-banner"))return;
+  b.classList.add("bd-banner");
   if(document.querySelector(".upd-banner"))b.style.top="calc(66px + env(safe-area-inset-top, 0px))";
   b.innerHTML="<span>Dostępna nowa baza zawodników</span><button type='button' class='upd-go'>IMPORTUJ</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
   b.querySelector(".upd-go").addEventListener("click",()=>{b.remove();bdPreview(buf,"Baza zawodników",false,hash);});
@@ -4543,24 +4545,24 @@ function bdBanner(buf,hash){
 /* Sprawdza, czy baza z repozytorium jest nowsza niż ostatnio zaimportowana lub już pokazana.
    Pusta aplikacja dostaje od razu podgląd importu (raz); w pozostałych przypadkach — baner. */
 let BdLastCheck=0;
+/* Zwraca obietnicę: true, gdy pokazano baner albo podgląd nowej bazy (wtedy przypomnienie o kopii czeka na następne uruchomienie). */
 function bdCheckStarter(){
   BdLastCheck=Date.now();
-  bdFetchStarter().then(buf=>{
+  return bdFetchStarter().then(buf=>{
     const hash=bdHash(buf),text=bdDecode(buf);
-    if(text===null)return;
+    if(text===null)return false;
     const plan=bdPlan(bdParseTable(text));
-    if(plan.errors.length||!plan.rows)return;
+    if(plan.errors.length||!plan.rows)return false;
     const st=S.settings;
-    if(!plan.ops.length){if(st.starterApplied!==hash)mutate(()=>{st.starterApplied=hash;});return;}
+    if(!plan.ops.length){if(st.starterApplied!==hash)mutate(()=>{st.starterApplied=hash;});return false;}
     const empty=!S.riders.length&&!Object.keys(S.comps||{}).length;
-    if(empty&&!st.starterAsked){mutate(()=>{st.starterAsked=true;});bdPreview(buf,"Baza startowa",true,hash);return;}
-    if(hash===st.starterApplied||hash===st.starterSeen)return;
-    mutate(()=>{st.starterSeen=hash;});
-    bdBanner(buf,hash);
-  }).catch(()=>{});
+    if(empty&&!st.starterAsked){mutate(()=>{st.starterAsked=true;});bdPreview(buf,"Baza startowa",true,hash);return true;}
+    if(hash===st.starterApplied||hash===st.starterSeen)return false;
+    bdBanner(buf,hash);return true;
+  }).catch(()=>false);
 }
 /* Ochrona przed wstrzyknięciem formuły w arkuszu: komórka zaczynająca się od = + - @ (lub tabulatora/CR) dostaje prefiks apostrofu;
-   przy imporcie bdPlan zdejmuje go z powrotem (bdUnformula). */
+   przy imporcie bdPlan zdejmuje go z powrotem. */
 function bdCsvCell(v){v=String(v==null?"":v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function bdDownload(name,rows){
   const txt="﻿"+rows.map(r=>r.map(bdCsvCell).join(";")).join("\r\n")+"\r\n";
@@ -4585,16 +4587,18 @@ UI.baseExportSheet=function(){
 /* Trwałość danych: prosimy przeglądarkę, by nie czyściła bazy przy braku miejsca; przypomnienie o kopii zapasowej. */
 (function(){
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-BdLastCheck>30*60*1000)bdCheckStarter();});
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-BdLastCheck>10*60*1000)bdCheckStarter();});
   setTimeout(()=>{
     try{
-      bdCheckStarter();
-      const n=Object.keys(S.comps||{}).length;
-      const last=S.settings&&S.settings.lastBackup;
-      if(n&&(!last||Date.now()-last>30*864e5)&&!(S.settings&&S.settings.backupNagAt&&Date.now()-S.settings.backupNagAt<7*864e5)){
-        mutate(()=>{S.settings.backupNagAt=Date.now();});
-        UI.toast("💾 Zapisz kopię danych (Ustawienia) — minął ponad miesiąc od ostatniej.");
-      }
+      bdCheckStarter().then(shown=>{
+        if(shown)return;
+        const n=Object.keys(S.comps||{}).length;
+        const last=S.settings&&S.settings.lastBackup;
+        if(n&&(!last||Date.now()-last>30*864e5)&&!(S.settings&&S.settings.backupNagAt&&Date.now()-S.settings.backupNagAt<7*864e5)){
+          mutate(()=>{S.settings.backupNagAt=Date.now();});
+          UI.toast("💾 Zapisz kopię danych (Ustawienia) — minął ponad miesiąc od ostatniej.");
+        }
+      });
     }catch(e){}
   },1500);
 })();
