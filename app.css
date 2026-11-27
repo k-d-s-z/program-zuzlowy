@@ -82,13 +82,12 @@ h3 { font-size: 0.85rem; color: var(--text-muted); text-align: center; letter-sp
 .btn:active { transform: scale(0.98); }
 
 .btn.primary {
-  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
-  color: #0b0f19;
-  border: 1px solid #7dd3fc;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  background: rgba(34, 211, 238, 0.12);
+  color: #67e8f9;
+  border: 1px solid #22d3ee;
 }
 .btn.primary:hover {
-  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
+  background: rgba(34, 211, 238, 0.22);
 }
 .btn.secondary {
   background: #374151;
@@ -339,10 +338,9 @@ table.pts td.plc:not(.tie) { cursor: default; }
 
 /* Ikona nawigacji g&#322;&#243;wnej &#8212; aktywny ekran pod&#347;wietlony jak przycisk primary */
 .iconbtn.active {
-  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
-  color: #0b0f19;
-  border: 1px solid #7dd3fc;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  background: rgba(34, 211, 238, 0.12);
+  color: #67e8f9;
+  border: 1px solid #22d3ee;
 }
 
 /* Suwak TAK/NIE */
@@ -420,7 +418,7 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
 .fbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bar-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--ov-12); padding: 8px 10px calc(8px + env(safe-area-inset-bottom,0px)); box-shadow: 0 -6px 14px -6px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
 .fbtn { flex: 0 0 clamp(40px, 11.5vw, 52px); height: 46px; padding: 0; border-radius: 12px; background: var(--ov-06); border: 1px solid var(--ov-15); color: var(--text-strong); display: flex; align-items: center; justify-content: center; }
 .fbtn svg { width: 24px; height: 24px; fill: currentColor; }
-.fbtn.active { background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%); color: #0b0f19; border: 1px solid #7dd3fc; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.fbtn.active { background: rgba(34, 211, 238, 0.12); color: #67e8f9; border: 1px solid #22d3ee; }
 .fbtn.danger { margin-left: auto; color: #f87171; border-color: rgba(248,113,113,0.7); background: rgba(248,113,113,0.12); }
 .fbar-lbl { flex: 1; min-width: 0; max-width: 50%; font-size: 0.72rem; font-weight: 800; line-height: 1.15; text-align: center; color: var(--text-strong); background: none; border: 0; padding: 0 2px; text-transform: none; }
 .fbar-lbl.big { font-size: 1.4rem; letter-spacing: 0.3px; }
@@ -522,7 +520,7 @@ body {
 /* Baner nowej wersji */
 .upd-banner { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(92vw, 460px); display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; z-index: 103; border-radius: 14px; background: rgba(14,28,64,0.92); border: 1px solid rgba(96,165,250,0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--text-main); font-size: 0.88rem; font-weight: 700; }
 .upd-banner span { flex: 1; }
-.upd-banner .upd-go { background: #38bdf8; color: #04060d; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px; }
+.upd-banner .upd-go { background: rgba(34, 211, 238, 0.12); color: #67e8f9; border: 1px solid #22d3ee; border-radius: 8px; padding: 8px 12px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px; }
 .upd-banner .upd-x { background: transparent; border: 0; color: var(--text-muted); font-size: 1.3rem; line-height: 1; padding: 4px 8px; }
 
 /* Czwórmecz */
@@ -564,4 +562,4 @@ body {
 .rt-btns { display: flex; gap: 8px; justify-content: center; }
 .rt-btns button { flex: 1; max-width: 150px; border-radius: 9px; padding: 8px 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; min-height: 38px; letter-spacing: 0.5px; }
 .rt-btns .rt-undo { background: transparent; color: var(--text-strong); border: 1px solid var(--ov-15); }
-.rt-btns .rt-ok { background: #38bdf8; color: #04060d; border: 0; }
+.rt-btns .rt-ok { background: rgba(34, 211, 238, 0.12); color: #67e8f9; border: 1px solid #22d3ee; }
