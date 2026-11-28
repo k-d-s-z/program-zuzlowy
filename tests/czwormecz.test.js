@@ -15,7 +15,7 @@ run(`(function(){for(let col=0;col<4;col++){const cnt={};for(let h=0;h<16;h++){c
 console.log('table ok');
 // wizard: Poland red, GB blue, Denmark white, Australia yellow
 run(`UI.startQuad();for(let i=0;i<4;i++)UI.qdSetTeam(i,String(i));UI.qdSetupNext();`);
-for(let i=0;i<4;i++)run(`UI.qdLineupNext()`);
+for(let i=0;i<4;i++)run(`(function(){const t=S.teams[QdW.slots[QdW.step]];let k=0;t.riders.forEach((n,ix)=>{if(n!==LG_ZZ_NAME&&k<5){UI.qdSetRider(k,String(ix));k++;}});})();UI.qdLineupNext()`);
 run(`(function(){const c=qdNewComp(QdW,'SWC');mutate(()=>{S.comps[c.id]=c;S.current=c.id;});QdW=null;qdRender();})()`);
 assert.equal(run(`qdc().qd.heats.length`),20);
 // heat 1: Poland rider idx 3 (Dudek, gate 3), GB 0 (Lambert gate 2), DK 3 (Thomsen gate1), AUS 1 (Kurtz gate 4)
@@ -62,7 +62,7 @@ assert(run(`$("qdSetupBody").innerHTML`).includes('Liga X'));
 run(`(function(){const c=qdc();c.qd.heats.slice(16).forEach((x,i)=>{x.slots.forEach(s=>{s.ri=0;});});})()`);
 console.log('ALL OK');
 // gate order on fresh heats
-run(`(function(){UI.startQuad();for(let i=0;i<4;i++)UI.qdSetTeam(i,String(i));UI.qdSetupNext();for(let i=0;i<3;i++)UI.qdLineupNext();const c=qdNewComp(QdW,'G');mutate(()=>{S.comps[c.id]=c;S.current=c.id;});QdW=null;})()`);
+run(`(function(){UI.startQuad();for(let i=0;i<4;i++)UI.qdSetTeam(i,String(i));UI.qdSetupNext();for(let i=0;i<4;i++){(function(){const t=S.teams[QdW.slots[QdW.step]];let k=0;t.riders.forEach((n,ix)=>{if(n!==LG_ZZ_NAME&&k<5){UI.qdSetRider(k,String(ix));k++;}});})();UI.qdLineupNext();}const c=qdNewComp(QdW,'G');mutate(()=>{S.comps[c.id]=c;S.current=c.id;});QdW=null;})()`);
 for(const i of [0,3,7,15]){
  const g=JSON.parse(run(`JSON.stringify(qdc().qd.heats[${i}].order.map(si=>qdc().qd.heats[${i}].slots[si].gate))`));
  assert.deepEqual(g,[1,2,3,4]);

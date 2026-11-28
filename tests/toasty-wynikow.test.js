@@ -26,7 +26,7 @@ console.log('pairs ok');
 // ---- czwórmecz ----
 run(`UI.confirm=(m,f)=>f();RT.length=0`);
 run(`S.teams=[];S.riders=[];['Polska','Szwecja','Dania','Australia'].forEach((n,i)=>S.teams.push({name:n,riders:['P'+i+'a Nowak','P'+i+'b Kowal','P'+i+'c Z','P'+i+'d W','P'+i+'e R'],national:true}));
-UI.startQuad();for(let i=0;i<4;i++)UI.qdSetTeam(i,String(i));UI.qdSetupNext();for(let i=0;i<4;i++)UI.qdLineupNext();`);
+UI.startQuad();for(let i=0;i<4;i++)UI.qdSetTeam(i,String(i));UI.qdSetupNext();for(let i=0;i<4;i++){(function(){const t=S.teams[QdW.slots[QdW.step]];let k=0;t.riders.forEach((n,ix)=>{if(n!==LG_ZZ_NAME&&k<5){UI.qdSetRider(k,String(ix));k++;}});})();UI.qdLineupNext();}`);
 run(`(function(){const c=qdNewComp(QdW,'G');mutate(()=>{S.comps[c.id]=c;S.current=c.id;});QdW=null;})()`);
 run(`UI.qdConfirmHeat(0)`);console.log('quad h1:',J('RT'));
 assert.equal(J('RT')[0].rows.length,4);assert(J('RT')[0].rows.every(r=>r.length==3&&typeof r[2]=='number'));
