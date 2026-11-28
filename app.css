@@ -244,19 +244,18 @@ table.pts td.plc { font-weight: 800; color: var(--accent); user-select: none; }
 .mC { background: #f8fafc; color: #0b0f19; }
 .mD { background: #eab308; color: #0b0f19; }
 
-/* Wy&#347;cigi &#8212; glassmorphism */
+/* Karty wyścigów — jednolite, bez blur */
 .heat {
   background: var(--ov-06);
   border: 1px solid var(--ov-12);
   border-radius: 16px;
   padding: 16px;
   margin: 14px 0;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--ov-08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
 }
 .heat.dim { opacity: 0.45; }
-.heat.active { border-color: var(--ov-35); box-shadow: 0 0 0 1px rgba(229,231,235,0.2), 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 var(--ov-12); }
+.heat.active { border-left: 3px solid var(--warn); background: var(--ov-08); box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+.heat.active .heatnum { color: var(--warn); }
 /* Nagłówek biegu zawija się na wąskich ekranach (duża czcionka, wiele przycisków
    w meczu ligowym) — akcje schodzą do drugiego wiersza, nigdy poza kartę. */
 .heathead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
@@ -371,7 +370,7 @@ table.pts td.plc:not(.tie) { cursor: default; }
 
 /* ===== MECZ LIGOWY (prefiks lg- — niezależny od stylów zawodów indywidualnych) ===== */
 #match { padding-bottom: 200px; }
-.lg-teamcard { position: relative; border-radius: 16px; margin: 14px 0; background: var(--ov-06); border: 1px solid var(--ov-12); overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--ov-08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.lg-teamcard { position: relative; border-radius: 16px; margin: 14px 0; background: var(--ov-06); border: 1px solid var(--ov-12); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
 .heat.done { background: rgba(0,0,0,0.28); border-color: var(--ov-08); opacity: 0.72; }
 .lg-helmets { display: flex; flex-shrink: 0; }
 .lg-helmets i { width: 13px; height: 13px; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3px var(--ov-20); margin-left: -5px; }
