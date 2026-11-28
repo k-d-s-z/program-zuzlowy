@@ -791,6 +791,17 @@ const UI={
     }))return;
     UI.closeModal();renderRaces();
   },
+  exclPick(heatN){
+    const c=cur();if(!c)return;
+    const h=compHeats(c).find(x=>x.n===heatN);
+    if(!h||h.confirmed)return;
+    const cand=h.order.map(ei=>({ei,e:h.entries[ei]})).filter(x=>!x.e.mark&&x.e.rider!==null&&x.e.rider!==undefined&&(x.e.replOf===undefined||x.e.replOf===null));
+    let html="<h3>Wykluczenie — wybierz zawodnika</h3>";
+    if(!cand.length)html+="<p style='text-align:center;color:var(--text-muted);margin:0 0 12px'>Brak zawodników w biegu.</p>";
+    else html+=cand.map(x=>"<button class='btn' style='text-transform:none' data-onclick='UI.markerMenu("+heatN+","+x.ei+")'>"+escq(c.mapping[x.e.rider]||"?")+"</button>").join("");
+    html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
+    UI.openModal(html);
+  },
   markerMenu(heatN,slotIdx){
     const c=cur();if(!c)return;
     const h=compHeats(c).find(x=>x.n===heatN);
@@ -1496,6 +1507,7 @@ function heatCardHtml(c,h,firstOpen){
     html+="<div class='heathead'><span class='heatnum'>BIEG "+heatLabel+(h.time?"<span class='heattime'>"+escq(h.time)+"</span>":"")+"</span>";
     html+="<div class='heatactions'>";
     html+="<button class='iconbtn sm' title='Czas wyścigu' data-onclick='UI.editHeatTime("+h.n+")'>"+ICON_CLOCK+"</button>";
+    if(!h.confirmed&&active)html+="<button class='iconbtn sm' title='Wykluczenie zawodnika' data-onclick='UI.exclPick("+h.n+")'>"+ICON_FLAG+"</button>";
     if(h.extra){
       html+="<button class='iconbtn sm' title='Usuń wyścig dodatkowy' style='color:var(--danger-fg)' data-onclick='UI.removeExtraHeat("+h.n+")'>"+ICON_X+"</button>";
     }
@@ -1549,7 +1561,7 @@ function heatCardHtml(c,h,firstOpen){
             "<div class='rcardbtns'>"+
               "<button class='cardbtn' "+upDis+" title='Przesuń w górę' data-onclick='UI.moveRider("+h.n+","+ei+",-1)'>"+ICON_UP+"</button>"+
               "<button class='cardbtn' "+downDis+" title='Przesuń w dół' data-onclick='UI.moveRider("+h.n+","+ei+",1)'>"+ICON_DOWN+"</button>"+
-              (!isSub?"<button class='cardbtn flag' title='Wykluczenie' data-onclick='UI.markerMenu("+h.n+","+ei+")'>"+ICON_FLAG+"</button>":"")+
+
             "</div>"+
           "</div>";
         }
