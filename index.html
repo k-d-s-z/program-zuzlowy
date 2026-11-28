@@ -39,8 +39,8 @@
   <div class="card">
     <button class="btn" id="continueBtn" style="display:none;flex-direction:column;gap:2px" data-onclick="UI.continueLast()"></button>
     <button class="btn" id="newCompBtn" data-onclick="UI.startComp()">+ Nowe zawody</button>
-    <button class="btn" data-onclick="UI.screen('people')">ZAWODNICY I DRUŻYNY</button>
-    <button class="btn" data-onclick="UI.screen('options')">USTAWIENIA</button>
+    <button class="btn" data-onclick="UI.screen('people')">Zawodnicy i drużyny</button>
+    <button class="btn" data-onclick="UI.screen('options')">Ustawienia</button>
   </div>
 </section>
 
@@ -48,8 +48,8 @@
 <section id="riders" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wr&#243;&#263;" data-onclick="UI.screen('people')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="ridersTitle">Zawodnicy</h2></div>
   <div class="card">
-    <button class="btn primary" data-onclick="UI.addRosterRider()">+ DODAJ ZAWODNIKA</button>
-    <button class="btn" data-onclick="UI.assignRosterRider()">PRZYPISZ Z BAZY</button>
+    <button class="btn primary" data-onclick="UI.addRosterRider()">+ Dodaj zawodnika</button>
+    <button class="btn" data-onclick="UI.assignRosterRider()">Przypisz z bazy</button>
     <div id="riderList" class="riderlist"></div>
   </div>
 </section>
@@ -120,7 +120,7 @@
     </div>
     <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin:8px 0 0">Gdy w&#322;&#261;czona, idealne remisy s&#261; rozstrzygane wynikami bezpo&#347;rednich pojedynk&#243;w mi&#281;dzy zremisowanymi zawodnikami.</p>
   </div>
-  <button class="btn primary" data-onclick="UI.launch()">URUCHOM ZAWODY</button>
+  <div class="ctabar"><button class="btn primary" data-onclick="UI.launch()">Uruchom zawody</button></div>
 </section>
 
 <!-- ZAWODNICY I DRUŻYNY — hub -->
@@ -135,8 +135,8 @@
   </div>
   <div class="card menu-grid">
     <h3>DRUŻYNY</h3>
-    <button class="btn" data-onclick="UI.openTeams('league')">DRUŻYNY LIGOWE</button>
-    <button class="btn" data-onclick="UI.openTeams('national')">DRUŻYNY NARODOWE</button>
+    <button class="btn" data-onclick="UI.openTeams('league')">Drużyny ligowe</button>
+    <button class="btn" data-onclick="UI.openTeams('national')">Drużyny narodowe</button>
   </div>
 </section>
 
@@ -144,7 +144,7 @@
 <section id="teams" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.screen('people')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 id="teamsTitle">DRUŻYNY</h2></div>
   <div class="card">
-    <button class="btn primary" data-onclick="UI.addTeam()">+ DODAJ DRUŻYNĘ</button>
+    <button class="btn primary" data-onclick="UI.addTeam()">+ Dodaj drużynę</button>
     <div id="teamList"></div>
   </div>
 </section>
@@ -153,7 +153,7 @@
 <section id="teamDetail" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.teamDetailBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="teamDetailTitle">DRUŻYNA</h2></div>
   <div class="card">
-    <button class="btn primary" data-onclick="UI.assignTeamRider()">PRZYPISZ Z BAZY</button>
+    <button class="btn primary" data-onclick="UI.assignTeamRider()">Przypisz z bazy</button>
     <div class="tr-actions"><button class="btn small" data-onclick="UI.addTeamRider()">+ Dodaj ręcznie</button><button class="btn small" data-onclick="UI.editTeam(S.uiTeam)">Edytuj drużynę</button></div>
     <div id="teamRiderList" class="riderlist"></div>
   </div>
@@ -173,7 +173,7 @@
   <div class="card" style="padding:8px">
     <div id="lgLineupList"></div>
   </div>
-  <button class="btn primary" data-onclick="UI.lgLineupNext()">DALEJ</button>
+  <div class="ctabar"><button class="btn primary" data-onclick="UI.lgLineupNext()">Dalej</button></div>
 </section>
 
 <!-- MECZ LIGOWY — jeden ekran: góra składy, dół wyścigi -->
@@ -187,14 +187,14 @@
 <section id="pmSetup" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.cancelPairs()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="pmSetupTitle">PARY</h2></div>
   <div class="card" style="padding:8px"><div id="pmSetupBody"></div></div>
-  <button class="btn primary" data-onclick="UI.pmSetupNext()">DALEJ</button>
+  <div class="ctabar"><button class="btn primary" data-onclick="UI.pmSetupNext()">Dalej</button></div>
 </section>
 
 <!-- ZAWODY PAR — składy drużyn (3 zawodników) -->
 <section id="pmLineup" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.pmLineupBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="pmLineupTitle">SKŁAD</h2></div>
   <div class="card" style="padding:8px"><div id="pmLineupBody"></div></div>
-  <button class="btn primary" id="pmLineupNext" data-onclick="UI.pmLineupNext()">DALEJ</button>
+  <div class="ctabar"><button class="btn primary" id="pmLineupNext" data-onclick="UI.pmLineupNext()">Dalej</button></div>
 </section>
 
 <!-- ZAWODY PAR — jeden ekran: składy (z wynikami drużyn) / wyścigi -->
@@ -208,14 +208,14 @@
 <section id="qdSetup" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.cancelQuad()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="qdSetupTitle">CZWÓRMECZ</h2></div>
   <div class="card" style="padding:8px"><div id="qdSetupBody"></div></div>
-  <button class="btn primary" data-onclick="UI.qdSetupNext()">DALEJ</button>
+  <div class="ctabar"><button class="btn primary" data-onclick="UI.qdSetupNext()">Dalej</button></div>
 </section>
 
 <!-- CZWÓRMECZ — składy drużyn (4 + rezerwa) -->
 <section id="qdLineup" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wróć" data-onclick="UI.qdLineupBack()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 class="grow" id="qdLineupTitle">SKŁAD</h2></div>
   <div class="card" style="padding:8px"><div id="qdLineupBody"></div></div>
-  <button class="btn primary" id="qdLineupNext" data-onclick="UI.qdLineupNext()">DALEJ</button>
+  <div class="ctabar"><button class="btn primary" id="qdLineupNext" data-onclick="UI.qdLineupNext()">Dalej</button></div>
 </section>
 
 <!-- CZWÓRMECZ — składy (z wynikami drużyn) / wyścigi -->
