@@ -1748,31 +1748,40 @@ function renderTeams(){
   el.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>UI.openTeam(+b.dataset.open));
   el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>UI.editTeam(+b.dataset.edit));
 }
+function setRiderCat(nm,jr){mutate(()=>{if(!S.juniors)S.juniors=[];S.juniors=S.juniors.filter(n=>n!==nm);if(jr)S.juniors.push(nm);});}
 function renderTeamDetail(){
   const t=S.teams[S.uiTeam];if(!t){UI.screen("teams");return;}
   $("teamDetailTitle").textContent=t.name.toUpperCase();
   const el=$("teamRiderList");
   if(!t.riders.length){el.innerHTML="<p style='color:var(--text-muted);text-align:center;'>Brak zawodników w drużynie.</p>";return;}
-  el.innerHTML="<div style='font-size:0.72rem;color:var(--text-muted);text-align:right;margin:0 0 6px;font-weight:700'>S — senior · J — junior</div>"+t.riders.map(name=>{
-    if(name===LG_ZZ_NAME)return "<div class='ri'><span>"+escq(name)+" <span class='mk'>ZZ</span></span></div>";
-    const isJr=!!(S.juniors||[]).includes(name);
-    const gi=S.riders.indexOf(name);
-    return "<div class='ri'><span>"+escq(name)+"</span><span>"+
-      "<button class='btn small "+(isJr?"secondary":"primary")+"' data-cat-s='"+escq(name)+"'>S</button>"+
-      "<button class='btn small "+(isJr?"primary":"secondary")+"' data-cat-j='"+escq(name)+"'>J</button> "+
-      (gi>=0?"<button class='btn small' data-tedit='"+gi+"'>Edytuj</button>":"")+
-      "<button class='btn small danger' data-rm='"+escq(name)+"'>Usuń</button></span></div>";
-  }).join("");
-  const setCat=(nm,jr)=>mutate(()=>{if(!S.juniors)S.juniors=[];S.juniors=jr?S.juniors.concat(nm):S.juniors.filter(n=>n!==nm);});
-  el.querySelectorAll("[data-tedit]").forEach(b=>b.onclick=()=>UI.editRider(+b.dataset.tedit));
-  el.querySelectorAll("[data-cat-s]").forEach(b=>b.onclick=()=>{if(S.juniors.includes(b.dataset.catS)){setCat(b.dataset.catS,false);renderTeamDetail();}});
-  el.querySelectorAll("[data-cat-j]").forEach(b=>b.onclick=()=>{if(!S.juniors.includes(b.dataset.catJ)){setCat(b.dataset.catJ,true);renderTeamDetail();}});
-  el.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{
-    const nm=b.dataset.rm;
-    mutate(()=>{t.riders=t.riders.filter(n=>n!==nm);});
-    renderTeamDetail();
-  });
+  /* Wiersz = tylko nazwisko (+ znaczek J). Kategoria, zmiana nazwiska i usunięcie są w menu zawodnika. */
+  const real=rpSorted(t.riders.filter(n=>n!==LG_ZZ_NAME));
+  el.innerHTML="<div class='tr-hint'>Dotknij zawodnika, aby zmienić kategorię (S/J), nazwisko lub usunąć go z drużyny.</div>"+
+    real.map(name=>{
+      const isJr=!!(S.juniors||[]).includes(name);
+      return "<button type='button' class='tr-row' data-trm='"+escq(name)+"'><span class='tr-name'>"+escq(name)+"</span>"+(isJr?"<span class='rl-j' title='Junior'>J</span>":"")+"<span class='tr-chev' aria-hidden='true'>&rsaquo;</span></button>";
+    }).join("")+
+    (t.riders.includes(LG_ZZ_NAME)?"<div class='tr-zz'><b>Zawodnik zastępowany (ZZ)</b><br><small>pozycja specjalna w składzie ligowym — nie jest zawodnikiem</small></div>":"");
+  el.querySelectorAll("[data-trm]").forEach(b=>b.onclick=()=>UI.teamRiderMenu(b.dataset.trm));
 }
+UI.teamRiderMenu=function(name){
+  const t=S.teams[S.uiTeam];if(!t||!t.riders.includes(name))return;
+  const gi=S.riders.indexOf(name);
+  UI.openModal("<h3>"+escq(name)+"</h3><p style='text-align:center;font-size:0.78rem;color:var(--text-muted);margin:0 0 8px'>Kategoria</p>"+lgCatToggleHtml()+
+    (gi>=0?"<button class='btn' id='trEdit'>Zmień nazwisko…</button>":"")+
+    "<button class='btn danger' id='trRm'>Usuń z drużyny</button><button class='btn' data-onclick='UI.closeModal()'>Zamknij</button>");
+  const paint=()=>{const jr=(S.juniors||[]).includes(name);$("catS").className="btn small "+(jr?"secondary":"primary");$("catJ").className="btn small "+(jr?"primary":"secondary");};
+  paint();
+  $("catS").onclick=()=>{setRiderCat(name,false);paint();renderTeamDetail();};
+  $("catJ").onclick=()=>{setRiderCat(name,true);paint();renderTeamDetail();};
+  if(gi>=0)$("trEdit").onclick=()=>{UI.closeModal();UI.editRider(gi);};
+  $("trRm").onclick=()=>{
+    UI.confirm("Usunąć <b>"+escq(name)+"</b> z drużyny <b>"+escq(t.name)+"</b>?<br><small style='color:var(--text-muted)'>Zawodnik zostaje we wspólnej bazie.</small>",()=>{
+      mutate(()=>{t.riders=t.riders.filter(n=>n!==name);});
+      renderTeamDetail();
+    });
+  };
+};
 UI.addTeamRider=function(){
   const t=S.teams[S.uiTeam];if(!t)return;
   UI.openModal("<h3>Dodaj zawodnika</h3><p style='text-align:center;font-size:0.78rem;color:var(--text-muted);margin:0 0 10px'>Drużyna: <b>"+escq(t.name)+"</b> — zawodnik trafi też do wspólnej bazy. Kategorię ustaw przyciskami poniżej: S (senior) lub J (junior)."+(teamIsNat(t)?" W zawodach par podział nie ma znaczenia, ale kategoria obowiązuje w całej bazie (np. w lidze).":"")+"</p>"+
