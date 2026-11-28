@@ -183,7 +183,7 @@ table.pts th, table.pts td {
   padding: 8px 7px; 
   text-align: center; 
   white-space: nowrap; 
-  border-bottom: 1px solid var(--border-color); 
+  border-bottom: 1px solid var(--ov-06); 
   font-size: 0.8rem; 
 }
 table.pts th { 
@@ -237,6 +237,13 @@ table.pts td.plc { font-weight: 800; color: var(--accent); user-select: none; }
   font-weight: 800;
   margin-right: 6px;
 }
+table.pts tr:nth-child(even) td { background: var(--ov-05); }
+table.pts tr:nth-child(even) td.col-no, table.pts tr:nth-child(even) td.col-nm { background: #1b1612; }
+table.pts th.sum, table.pts td.sum { border-right: 2px solid var(--border-color); }
+table.pts td.sum { background: var(--ov-04); }
+table.pts td.plc.top1 { background: rgba(251,191,36,0.20); }
+table.pts td.plc.top2 { background: rgba(251,191,36,0.13); }
+table.pts td.plc.top3 { background: rgba(251,191,36,0.07); }
 
 .cell { display: inline-block; min-width: 26px; padding: 2px 4px; border-radius: 4px; font-weight: 800; text-align: center; }
 .mA { background: #ef4444; color: #fff; }
@@ -382,7 +389,7 @@ table.pts td.plc:not(.tie) { cursor: default; }
 .lg-tscore { font-size: 1.6rem; font-weight: 800; font-family: var(--font-head); color: var(--accent); flex-shrink: 0; margin-left: auto; }
 .tblwrap { border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto; }
 table.lg-rt { border-collapse: separate; border-spacing: 0; min-width: 100%; font-variant-numeric: tabular-nums; width: 100%; }
-table.lg-rt th, table.lg-rt td { padding: 8px 7px; text-align: center; white-space: nowrap; font-size: 0.92rem; border-bottom: 1px solid var(--border-color); }
+table.lg-rt th, table.lg-rt td { padding: 8px 7px; text-align: center; white-space: nowrap; font-size: 0.92rem; border-bottom: 1px solid var(--ov-06); }
 table.lg-rt th { color: var(--text-muted); font-weight: 800; background: var(--ov-03); }
 table.lg-rt td.lg-nm { text-align: left; font-weight: 700; min-width: 120px; }
 table.lg-rt td.lg-nm .lg-rname { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: 1.12; margin-left: 4px; }

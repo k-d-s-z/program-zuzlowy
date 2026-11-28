@@ -1206,7 +1206,7 @@ function renderPoints(){
   /* Kolejność wierszy: numery startowe albo realna kolejność w klasyfikacji. */
   let order=[...Array(18)].map((_,i)=>i+1).filter(n=>c.mapping[n]);
   if(S.settings.sortByPlace)order=groups.flatMap(g=>[...g.nums].sort((a,b)=>a-b));
-  let html="<tr><th class='col-no'>Nr</th><th class='col-nm'>Zawodnik</th><th>Pkt</th><th>Msc</th>";
+  let html="<tr><th class='col-no'>Nr</th><th class='col-nm'>Zawodnik</th><th class='sum'>Pkt</th><th class='sum'>Msc</th>";
   heats.forEach(h=>{
     html+="<th>"+getHeatLabel(h)+"</th>";
   });
@@ -1219,9 +1219,10 @@ function renderPoints(){
     html+="<tr>";
     html+="<td class='col-no'>"+n+"</td><td class='col-nm'>"+nmHtml+"</td>";
     const s=st[n];
-    html+="<td><b>"+(s?s.pts:0)+"</b></td>";
+    html+="<td class='sum'><b>"+(s?s.pts:0)+"</b></td>";
     const plcTxt=placeLabel(c,n,groups);
-    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" — rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
+    const plcNum=parseInt(plcTxt,10);
+    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+((plcNum>=1&&plcNum<=3)?" top"+plcNum:"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" — rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
     heats.forEach(h=>{
       const gi=h.entries.findIndex(e=>e.rider===n||e.repl===n);
       let cell="<span class='cell' style='color:var(--text-muted)'>·</span>";
