@@ -131,6 +131,9 @@ h3 { font-size: 0.85rem; color: var(--text-muted); text-align: center; letter-sp
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
+/* Separator wewnątrz karty — oddziela akcje destrukcyjne */
+.divider { height: 1px; background: var(--ov-08); margin: 12px 0 6px; }
+
 /* Pola formularzy */
 input[type="text"], input[type="number"], select, textarea {
   background: var(--bg-card-hover);
@@ -320,8 +323,8 @@ table.pts td.plc { font-weight: 800; color: var(--amber); user-select: none; }
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .numpad .btn { margin: 0; }
 .timedisplay { text-align: center; font-size: 2.2rem; font-weight: 800; margin: 6px 0 16px; letter-spacing: 1px; color: var(--accent-blue); }
-.toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); max-width: 90vw; text-align: center; background: #10b981; color: #0b0f19; padding: 10px 16px; border-radius: 8px; font-weight: 800; display: none; z-index: 101; font-size: 0.85rem; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
-.toast.err { background: #dc2626; color: #fff; }
+.toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); max-width: 90vw; text-align: center; background: rgba(20,16,11,0.97); border: 1px solid rgba(251,191,36,0.5); color: var(--text-strong); padding: 10px 16px; border-radius: 8px; font-weight: 800; display: none; z-index: 101; font-size: 0.85rem; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+.toast.err { background: rgba(26,10,10,0.97); border-color: var(--danger-btn-bd); color: var(--danger-fg); }
 
 /* Przycisk destrukcyjny w nag&#322;&#243;wku (reset wszystkich wy&#347;cig&#243;w) */
 .iconbtn.danger { color: var(--danger-fg); border-color: rgba(248,113,113,0.55); background: var(--tint-danger); }
@@ -451,6 +454,12 @@ table.lg-rt td.lg-bon { font-weight: 800; color: var(--amber); background: var(-
   .wrap, .lg-scorebar-inner { max-width: 760px; }
   .modal { max-width: 460px; }
   h1 { font-size: 1.6rem; }
+  /* Menu w dwóch kolumnach — pełnoszerokościowe przyciski rozciągnięte na ~900px
+     wyglądały pusto; treść i akcje destrukcyjne zostają na pełnej szerokości. */
+  .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: stretch; }
+  .menu-grid h3, .menu-grid p, .menu-grid .divider, .menu-grid > div { grid-column: 1 / -1; }
+  .menu-grid .btn { margin: 0; }
+  .menu-grid .btn.danger { grid-column: 1 / -1; }
 }
 @media (min-width: 1100px) {
   .wrap, .lg-scorebar-inner { max-width: 960px; }
@@ -518,7 +527,7 @@ body {
 .btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); }
 
 /* Baner nowej wersji */
-.upd-banner { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(92vw, 460px); display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; z-index: 103; border-radius: 14px; background: rgba(14,28,64,0.92); border: 1px solid rgba(96,165,250,0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--text-main); font-size: 0.88rem; font-weight: 700; }
+.upd-banner { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(92vw, 460px); display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; z-index: 103; border-radius: 14px; background: rgba(22,16,11,0.95); border: 1px solid rgba(251,146,60,0.55); box-shadow: 0 10px 30px rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--text-main); font-size: 0.88rem; font-weight: 700; }
 .upd-banner span { flex: 1; }
 .upd-banner .upd-go { background: rgba(249,115,22,0.22); color: #ffa04d; border: 1px solid #fb923c; border-radius: 8px; padding: 8px 12px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px; }
 .upd-banner .upd-x { background: transparent; border: 0; color: var(--text-muted); font-size: 1.3rem; line-height: 1; padding: 4px 8px; }
