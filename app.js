@@ -1613,27 +1613,32 @@ function heatCardHtml(c,h,firstOpen){
    ale tylko gdy plik jest hostowany przez http/https razem z sw.js. Otwarty lokalnie
    (file://) po prostu nic nie robi — błąd jest wyciszony. */
 if("serviceWorker" in navigator){
+  /* Powiadomienie o nowej wersji: nowy Service Worker przejmuje kontrolę (skipWaiting + claim),
+     ale otwarta strona działa jeszcze na starym kodzie — pytamy, czy odświeżyć. Dane są zapisane
+     na bieżąco, więc odświeżenie niczego nie gubi; nie robimy go jednak samowolnie. */
+  const hadCtl=!!navigator.serviceWorker.controller;
+  let shown=false;
+  const showUpd=()=>{
+    if(shown||!hadCtl)return;shown=true;
+    const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
+    b.innerHTML="<span>Dostępna nowa wersja aplikacji</span><button type='button' class='upd-go'>Odśwież</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
+    b.querySelector(".upd-go").addEventListener("click",()=>location.reload());
+    b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
+    document.body.appendChild(b);
+  };
+  navigator.serviceWorker.addEventListener("controllerchange",showUpd);
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("./sw.js").then(reg=>{
+      /* Wyścig: nowy SW może przejąć kontrolę (claim) zanim strona podłączy listener
+         controllerchange — wtedy controller jest już nowy, a strona działa na starym kodzie. */
+      const sw=navigator.serviceWorker;
+      if(sw.controller&&((reg.active&&reg.active!==sw.controller)||reg.waiting))showUpd();
       /* Szukaj nowej wersji przy powrocie do aplikacji i co pół godziny
          (zainstalowana PWA może miesiącami nie robić pełnego odświeżenia). */
       const check=()=>{try{reg.update().catch(()=>{});}catch(e){}};
       document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check();});
       setInterval(check,30*60*1000);
     }).catch(()=>{});
-  });
-  /* Powiadomienie o nowej wersji: nowy Service Worker przejmuje kontrolę (skipWaiting + claim),
-     ale otwarta strona działa jeszcze na starym kodzie — pytamy, czy odświeżyć. Dane są zapisane
-     na bieżąco, więc odświeżenie niczego nie gubi; nie robimy go jednak samowolnie. */
-  const hadCtl=!!navigator.serviceWorker.controller;
-  let shown=false;
-  navigator.serviceWorker.addEventListener("controllerchange",()=>{
-    if(!hadCtl||shown)return;shown=true;
-    const b=document.createElement("div");b.className="upd-banner";b.setAttribute("role","status");
-    b.innerHTML="<span>Dostępna nowa wersja aplikacji</span><button type='button' class='upd-go'>Odśwież</button><button type='button' class='upd-x' aria-label='Zamknij'>&#215;</button>";
-    b.querySelector(".upd-go").addEventListener("click",()=>location.reload());
-    b.querySelector(".upd-x").addEventListener("click",()=>b.remove());
-    document.body.appendChild(b);
   });
 }
 /* Dostępność: etykiety aria dla przycisków z samym title, Esc/Tab w oknach, Enter/Spacja na role="button"/"switch". */
