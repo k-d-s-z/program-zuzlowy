@@ -55,7 +55,7 @@ Aplikacja internetowa typu PWA (Progressive Web App) do śledzenia, prowadzenia 
 
 ## 📄 Licencja
 
-Ten projekt jest udostępniany na licencji MIT.
+Ten projekt jest udostępniany na licencji [GNU AGPL v3](LICENSE) (AGPL-3.0). Jeśli udostępniasz zmodyfikowaną wersję (także jako usługę w sieci), musisz udostępnić jej kod źródłowy na tej samej licencji.
 
 ---
 
@@ -109,7 +109,7 @@ A Progressive Web App (PWA) for managing, tracking, and scoring speedway matches
 
 ## 📄 License
 
-Distributed under the MIT License.
+Distributed under the [GNU AGPL v3](LICENSE) (AGPL-3.0). If you provide a modified version (including as a network service), you must make its source code available under the same license.
 
 ---
 
