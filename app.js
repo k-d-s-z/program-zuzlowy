@@ -531,7 +531,7 @@ const UI={
       const openCnt=heats.filter(h=>!h.confirmed).length;
       const doneCnt=heats.filter(h=>h.confirmed).length;
       if(doneCnt>0&&openCnt>0)
-        msg="<b style='color:var(--amber)'>⚠ Uwaga: zawody w toku — "+openCnt+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Bieżący stan zostanie zapisany i można do nich wrócić z ekranu głównego.</small>";
+        msg="<b style='color:var(--warn)'>⚠ Uwaga: zawody w toku — "+openCnt+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Bieżący stan zostanie zapisany i można do nich wrócić z ekranu głównego.</small>";
     }
     UI.confirm(msg,()=>{UI.screen("home");});
   },
@@ -790,17 +790,6 @@ const UI={
       h.entries[slotIdx].rider=num;h.entries[slotIdx].repl=null;h.entries[slotIdx].mark=null;
     }))return;
     UI.closeModal();renderRaces();
-  },
-  exclPick(heatN){
-    const c=cur();if(!c)return;
-    const h=compHeats(c).find(x=>x.n===heatN);
-    if(!h||h.confirmed)return;
-    const cand=h.order.map(ei=>({ei,e:h.entries[ei]})).filter(x=>!x.e.mark&&x.e.rider!==null&&x.e.rider!==undefined&&(x.e.replOf===undefined||x.e.replOf===null));
-    let html="<h3>Wykluczenie — wybierz zawodnika</h3>";
-    if(!cand.length)html+="<p style='text-align:center;color:var(--text-muted);margin:0 0 12px'>Brak zawodników w biegu.</p>";
-    else html+=cand.map(x=>"<button class='btn' style='text-transform:none' data-onclick='UI.markerMenu("+heatN+","+x.ei+")'>"+escq(c.mapping[x.e.rider]||"?")+"</button>").join("");
-    html+="<button class='btn' style='margin-top:10px' data-onclick='UI.closeModal()'>Anuluj</button>";
-    UI.openModal(html);
   },
   markerMenu(heatN,slotIdx){
     const c=cur();if(!c)return;
@@ -1206,7 +1195,7 @@ function renderPoints(){
   /* Kolejność wierszy: numery startowe albo realna kolejność w klasyfikacji. */
   let order=[...Array(18)].map((_,i)=>i+1).filter(n=>c.mapping[n]);
   if(S.settings.sortByPlace)order=groups.flatMap(g=>[...g.nums].sort((a,b)=>a-b));
-  let html="<tr><th class='col-no'>Nr</th><th class='col-nm'>Zawodnik</th><th>Pkt</th><th>Msc</th>";
+  let html="<tr><th class='col-no'>Nr</th><th class='col-nm'>Zawodnik</th><th class='sum'>Pkt</th><th class='sum'>Msc</th>";
   heats.forEach(h=>{
     html+="<th>"+getHeatLabel(h)+"</th>";
   });
@@ -1219,9 +1208,10 @@ function renderPoints(){
     html+="<tr>";
     html+="<td class='col-no'>"+n+"</td><td class='col-nm'>"+nmHtml+"</td>";
     const s=st[n];
-    html+="<td><b>"+(s?s.pts:0)+"</b></td>";
+    html+="<td class='sum'><b>"+(s?s.pts:0)+"</b></td>";
     const plcTxt=placeLabel(c,n,groups);
-    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" — rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
+    const plcNum=parseInt(plcTxt,10);
+    html+="<td class='plc"+(tieSet.has(n)?" tie":"")+((plcNum>=1&&plcNum<=3)?" top"+plcNum:"")+"' data-rider='"+n+"'"+(tieSet.has(n)?" role='button' tabindex='0' aria-label='Miejsce "+escq(plcTxt)+" — rozstrzygnij remis'":"")+">"+escq(plcTxt)+"</td>";
     heats.forEach(h=>{
       const gi=h.entries.findIndex(e=>e.rider===n||e.repl===n);
       let cell="<span class='cell' style='color:var(--text-muted)'>·</span>";
@@ -1512,7 +1502,6 @@ function heatCardHtml(c,h,firstOpen){
     html+="<div class='heathead'><span class='heatnum'>BIEG "+heatLabel+(h.time?"<span class='heattime'>"+escq(h.time)+"</span>":"")+"</span>";
     html+="<div class='heatactions'>";
     html+="<button class='iconbtn sm' title='Czas wyścigu' data-onclick='UI.editHeatTime("+h.n+")'>"+ICON_CLOCK+"</button>";
-    if(!h.confirmed&&active)html+="<button class='iconbtn sm' title='Wykluczenie zawodnika' data-onclick='UI.exclPick("+h.n+")'>"+ICON_FLAG+"</button>";
     if(h.extra){
       html+="<button class='iconbtn sm' title='Usuń wyścig dodatkowy' style='color:var(--danger-fg)' data-onclick='UI.removeExtraHeat("+h.n+")'>"+ICON_X+"</button>";
     }
@@ -1564,6 +1553,7 @@ function heatCardHtml(c,h,firstOpen){
             "<span class='name'"+nameAttrs+">"+escq(c.mapping[r]||"?")+subNote+"</span>"+
             "<span class='pos'>"+pos+".</span>"+
             "<div class='rcardbtns'>"+
+              "<button class='cardbtn flag' title='Wykluczenia i zmiany' data-onclick='UI.markerMenu("+h.n+","+ei+")'>"+ICON_FLAG+"</button>"+
               "<button class='cardbtn' "+upDis+" title='Przesuń w górę' data-onclick='UI.moveRider("+h.n+","+ei+",-1)'>"+ICON_UP+"</button>"+
               "<button class='cardbtn' "+downDis+" title='Przesuń w dół' data-onclick='UI.moveRider("+h.n+","+ei+",1)'>"+ICON_DOWN+"</button>"+
 
@@ -2780,7 +2770,7 @@ UI.leaveMatch=function(){
     const open=c.match.heats.filter(h=>!h.confirmed).length;
     const done=c.match.heats.filter(h=>h.confirmed).length;
     if(done>0&&open>0)
-      msg="<b style='color:var(--amber)'>⚠ Uwaga: mecz w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
+      msg="<b style='color:var(--warn)'>⚠ Uwaga: mecz w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
   }
   UI.confirm(msg,()=>{UI.screen("home");});
 };
@@ -3486,7 +3476,7 @@ UI.pmLeave=function(){
   if(c){
     const hs=c.pm.heats.filter(h=>!h.extra);
     const open=hs.filter(h=>!h.confirmed).length,done=hs.filter(h=>h.confirmed).length;
-    if(done>0&&open>0)msg="<b style='color:var(--amber)'>⚠ Uwaga: zawody w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
+    if(done>0&&open>0)msg="<b style='color:var(--warn)'>⚠ Uwaga: zawody w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
   }
   UI.confirm(msg,()=>{UI.screen("home");});
 };
@@ -4158,7 +4148,7 @@ UI.qdLeave=function(){
   if(c){
     const hs=c.qd.heats.filter(h=>!h.extra);
     const open=hs.filter(h=>!h.confirmed).length,done=hs.filter(h=>h.confirmed).length;
-    if(done>0&&open>0)msg="<b style='color:var(--amber)'>⚠ Uwaga: zawody w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
+    if(done>0&&open>0)msg="<b style='color:var(--warn)'>⚠ Uwaga: zawody w toku — "+open+" niezatwierdzonych biegów.</b><br><small style='color:var(--text-muted)'>Stan zostanie zapisany i można do niego wrócić z ekranu głównego.</small>";
   }
   UI.confirm(msg,()=>{UI.screen("home");});
 };
