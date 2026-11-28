@@ -679,7 +679,7 @@ const UI={
       const sorted=[...g.nums].sort((a,b)=>pts[b]-pts[a]);
       html+="<p style='text-align:center;color:var(--text-muted);font-size:0.78rem;margin:0 0 6px'>Bezpośrednie pojedynki — punkty wirtualne:</p>";
       html+="<div style='border:1px solid var(--border-color);border-radius:10px;margin:0 0 12px;overflow:hidden'>";
-      html+=sorted.map(n=>"<div style='display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border-color);font-size:0.85rem"+(n===num?";background:rgba(56,189,248,0.12)":"")+"'><span><span class='ridernum'>"+n+"</span>"+escq(c.mapping[n]||"?")+"</span><b>"+pts[n]+" pkt</b></div>").join("");
+      html+=sorted.map(n=>"<div style='display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border-color);font-size:0.85rem"+(n===num?";background:rgba(251,191,36,0.12)":"")+"'><span><span class='ridernum'>"+n+"</span>"+escq(c.mapping[n]||"?")+"</span><b>"+pts[n]+" pkt</b></div>").join("");
       html+="</div>";
     }
     html+="<p style='text-align:center;'>Wybierz dokładne miejsce dla zawodnika nr <b>"+num+" ("+escq(c.mapping[num]||"?")+")</b>:</p>";
