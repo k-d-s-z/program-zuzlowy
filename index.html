@@ -58,7 +58,7 @@
 <section id="options" class="screen">
   <div class="topbar"><button class="iconbtn" title="Wr&#243;&#263;" data-onclick="UI.screen('home')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2>USTAWIENIA</h2></div>
   
-  <div class="card menu-grid">
+  <div class="card">
     <h3>USTAWIENIA APLIKACJI</h3>
     <div style="display:flex;gap:6px;margin-top:4px">
       <span style="align-self:center;font-size:0.75rem;color:var(--text-muted);flex:1;font-weight:700">ROZMIAR CZCIONKI:</span>
@@ -66,18 +66,22 @@
       <button class="btn small" id="fontM" data-onclick="UI.setFont('M')">M</button>
       <button class="btn small" id="fontL" data-onclick="UI.setFont('L')">L</button>
     </div>
-    <button class="btn" style="margin-top:10px" data-onclick="UI.exportData()">Zapisz kopi&#281; danych</button>
-    <button class="btn" data-onclick="UI.pickImportFile()">Przywr&#243;&#263; kopi&#281; danych</button>
+    <div class="btnrow" style="margin-top:10px">
+      <button class="btn" data-onclick="UI.exportData()">Zapisz kopi&#281; danych</button>
+      <button class="btn" data-onclick="UI.pickImportFile()">Przywr&#243;&#263; kopi&#281; danych</button>
+    </div>
     <input type="file" id="impFile" accept=".json" style="display:none" data-onchange="UI.importData(this)">
   </div>
 
-  <div class="card menu-grid">
+  <div class="card">
     <h3>BAZA ZAWODNIK&#211;W Z ARKUSZA</h3>
     <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 8px;text-align:center">Plik CSV/TSV/TXT: Imi&#281; &#183; Nazwisko &#183; J/S &#183; Dru&#380;yna ligowa &#183; Dru&#380;yna narodowa &#183; Rozgrywki. Import tylko dopisuje i zmienia przypisania.</p>
-    <button class="btn" data-onclick="UI.baseLoadStarter()">Pobierz baz&#281; zawodnik&#243;w z GitHuba</button>
-    <button class="btn" data-onclick="UI.pickBaseImport()">Importuj zawodnik&#243;w z arkusza</button>
-    <button class="btn" data-onclick="UI.baseTemplate()">Pobierz wz&#243;r pliku (CSV)</button>
-    <button class="btn" data-onclick="UI.baseExportSheet()">Eksportuj baz&#281; do arkusza (CSV)</button>
+    <div class="btnrow">
+      <button class="btn" data-onclick="UI.baseLoadStarter()">Pobierz baz&#281; z GitHuba</button>
+      <button class="btn" data-onclick="UI.pickBaseImport()">Importuj z arkusza</button>
+      <button class="btn" data-onclick="UI.baseTemplate()">Pobierz wz&#243;r (CSV)</button>
+      <button class="btn" data-onclick="UI.baseExportSheet()">Eksportuj do CSV</button>
+    </div>
     <div class="divider"></div>
     <button class="btn danger" data-onclick="UI.baseClear()">Wyczy&#347;&#263; baz&#281; zawodnik&#243;w</button>
     <input type="file" id="bdFile" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values" style="display:none" data-onchange="UI.baseImport(this)">
